@@ -47,8 +47,8 @@
     <string name="job_downloading">Lade %1$d%%</string>
     <string name="job_checking">Prüfe Signatur</string>
     <string name="job_installing">Installiere</string>
-    <string name="action_install_size">Installiere · %1$s</string>
-    <string name="action_update_size">Aktualisiere · %1$s</string>
+    <string name="action_install_size">Installieren · %1$s</string>
+    <string name="action_update_size">Aktualisieren · %1$s</string>
     <string name="action_update">Aktualisieren</string>
     <string name="action_open">Öffnen</string>
 
@@ -97,7 +97,7 @@
     <string name="prov_signing">Signaturschlüssel</string>
     <string name="sig_unrecorded">Noch nicht erfasst. Android sucht weiterhin Updates anhand der installierten Kopie.</string>
     <string name="sig_checked">Vor der Installation auf Entwicklersignatur überprüft</string>
-    <string name="sig_mismatch">Andere Entwicklersignatur. Aktualisierungen angehalten.‪.</string>
+    <string name="sig_mismatch">Andere Entwicklersignatur. Aktualisierungen angehalten.</string>
     <string name="sig_sibling">Dieser TV hat Build %1$s. Deinstalliere es um zu wechseln.</string>
     <string name="sig_matches">Entspricht der Entwicklersignatur</string>
     <string name="file_picked_any">Datei für alle TVs ausgewählt</string>
@@ -111,18 +111,18 @@
     <string name="search_ok_edit">OK zum Bearbeiten</string>
     <string name="search_try">Versuche</string>
     <string name="search_clear">Löschen</string>
-    <string name="search_none">Keine Apps stimmen mit „%1$s“ überein”</string>
+    <string name="search_none">Keine Apps stimmen mit „%1$s“ überein</string>
     <plurals name="search_results">
-        <item quantity="one">%1$d App für „%2$s“”</item>
-        <item quantity="other">%1$d Apps für „%2$s“”</item>
+        <item quantity="one">%1$d App für „%2$s“</item>
+        <item quantity="other">%1$d Apps für „%2$s“</item>
     </plurals>
-    <string name="search_tip">Versuche ein kürzeres Wort oder die Funktion der App, z. B. „Videoplayer“”.</string>
+    <string name="search_tip">Versuche ein kürzeres Wort oder die Funktion der App, z. B. „Videoplayer“.</string>
     <string name="search_matches">Übereinstimmungen:</string>
 
     <string name="mine_title">Meine Apps</string>
     <plurals name="updates_ready">
         <item quantity="one">%1$d Update bereit</item>
-        <item quantity="other">%1$d hat ein Update</item>
+        <item quantity="other">%1$d Updates bereit</item>
     </plurals>
     <string name="held_count">%1$d für Überprüfung zurückgehalten</string>
     <string name="from_shelf_count">%1$d von Open Shelf</string>
@@ -160,7 +160,7 @@
     <string name="catalog_value">%1$s Apps · %2$s</string>
     <string name="catalog_help">Jede Android TV-App auf GitHub die in den letzten 3 Jahren eine APK veröffentlicht hat. Geprüft am %1$s. Diese Version enthält die Liste in der App.</string>
     <string name="set_stars">Apps mit weniger Sternen als ausblenden</string>
-    <string name="set_stars_help">Hält sehr neue oder wenig genutzte Apps aus "Entdecken" fern. %1$s Apps sind ausgeblendet. Die Suche findet sie immer noch anhand ihres genauen Namens.</string>
+    <string name="set_stars_help">Hält sehr neue oder wenig genutzte Apps aus „Entdecken“ fern. %1$s Apps sind ausgeblendet. Die Suche findet sie immer noch anhand ihres genauen Namens.</string>
     <string name="set_streams">IPTV und Streaming-Apps ausblenden</string>
     <string name="streams_on">An · %1$s ausgeblendet</string>
     <string name="streams_off">Aus</string>
