@@ -104,6 +104,15 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 enum class Tab(val label: Int) { Discover(R.string.tab_discover), Categories(R.string.tab_categories), Search(R.string.tab_search), Mine(R.string.tab_mine), Settings(R.string.tab_settings) }
 
@@ -776,6 +785,7 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
         editing = false
         runCatching { handoff.target.requestFocus() }
     }
+    val focus = LocalFocusManager.current
     val side = Modifier.padding(horizontal = 48.dp)
     Column(Modifier.fillMaxSize()) {
         Focusable(onClick = { editing = true }, modifier = side, requester = handoff.target) { f ->
@@ -800,7 +810,19 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
                         modifier = Modifier.fillMaxWidth()
                             .focusRequester(field)
                             .focusProperties { canFocus = editing }
-                            .onFocusChanged { if (!it.isFocused && editing) editing = false },
+                            .onFocusChanged { if (!it.isFocused && editing) editing = false }
+                            .onPreviewKeyEvent { e ->
+                                if (!editing || e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                                when (e.key) {
+                                    Key.Back -> { finish(); true }
+                                    Key.DirectionDown, Key.DirectionUp -> {
+                                        finish()
+                                        focus.moveFocus(if (e.key == Key.DirectionDown) FocusDirection.Down else FocusDirection.Up)
+                                        true
+                                    }
+                                    else -> false
+                                }
+                            },
                     )
                     if (query.isEmpty()) {
                         T(str(if (editing) R.string.search_hint_editing else R.string.search_hint), 22.sp, color = C.Stone2, tight = true, maxLines = 1)
