@@ -234,12 +234,13 @@ fun Pill(
                 .height(38.dp)
                 .background(bg, CircleShape)
                 .then(if (!solid && !f) Modifier.border(1.dp, C.Hair2, CircleShape) else Modifier)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = if (text.isEmpty()) 13.dp else 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val fg = if (f) C.OnAccent else if (solid) C.OnInk else C.Ink
             leading?.invoke()
             if (icon != null) Ico(icon, 16.dp, fg)
+            if (text.isEmpty()) return@Row
             if (icon != null || leading != null) Spacer(Modifier.width(7.dp))
             T(text, 14.5.sp, color = fg, weight = FontWeight.SemiBold, maxLines = 1)
         }

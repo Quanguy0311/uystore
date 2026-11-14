@@ -74,7 +74,7 @@
     <string name="fact_licence">Lizenz</string>
     <string name="fact_stars">Sterne</string>
     <string name="licence_unknown">Repository ansehen</string>
-    <string name="view_app">App ansehen</string>
+    <string name="view_app">Details</string>
     <string name="row_tv">Für TVs gemacht</string>
     <string name="row_tv_sub">Apps mit TV-Artwork</string>
     <string name="row_recent">Kürzlich aktualisiert</string>

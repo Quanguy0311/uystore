@@ -690,7 +690,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
             if (app.archived) T(str(R.string.archived_note), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             Row(Modifier.padding(top = 10.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 InstallButton(app, requester = handoff.target)
-                if (installed != null && !Installer.busy(app.id)) Pill(str(R.string.uninstall), { uninstall(ctx, app.pkg) }, icon = Icons.Trash)
+                if (installed != null && !Installer.busy(app.id)) Pill(if (installed.versionCode < app.versionCode) "" else str(R.string.uninstall), { uninstall(ctx, app.pkg) }, icon = Icons.Trash)
             }
             JobNote(app, Modifier.padding(top = 6.dp))
             StorageLine(app, installed)
