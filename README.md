@@ -10,7 +10,7 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 
 ## What it does
 
-- Lists about 2,900 Android TV apps from GitHub, in 18 categories
+- Lists about 3,000 Android TV apps from GitHub, in 18 categories
 - Every app in the list declares TV support in its manifest and ships an APK in its latest release
 - Search by name or by what an app does, like "video player" or "launcher"
 - Picks the APK that matches your TV's CPU
@@ -19,6 +19,8 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 - When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
+- In English and German, with a language switch in Settings
+- Updates itself: new versions of Open Shelf show up in My Apps
 
 ## Screenshots
 
@@ -39,11 +41,40 @@ You need an Android TV, Google TV, Fire TV or other Android box running Android 
 2. Sideload it with an app like Downloader, or from a computer with `adb install OpenShelf-x.y.z.apk`.
 3. The first time you install an app, Android asks you to allow installs from Open Shelf. Allow it once.
 
+After that, new versions of Open Shelf show up in My Apps, so you only sideload it once.
+
+## Troubleshooting
+
+### Play Protect says "Harmful app blocked"
+
+Play Protect is wary of new apps that can install other apps. Tap More details, then Install anyway. If that option isn't there, open the Play Store, go to Play Protect, turn off "Scan apps with Play Protect", install Open Shelf and turn scanning back on.
+
+### "App not installed"
+
+- Compare the downloaded file's size with the one on the Releases page. A smaller file means the download was cut short.
+- If Play Protect showed a warning first, see above.
+- From a computer, `adb install OpenShelf-x.y.z.apk` prints the exact reason, like `INSTALL_FAILED_...`.
+
+### The switch to allow installs won't turn on
+
+Apps that draw over the screen, like blue light filters or floating buttons, stop Android from accepting presses on permission switches. Turn them off and try again, or run this from a computer:
+
+```
+adb shell appops set io.github.wingedpanther.openshelf REQUEST_INSTALL_PACKAGES allow
+```
+
+### My TV runs Android 8 or older
+
+Open Shelf needs Android 9 or newer, so it won't install there.
+
 ## The catalog
 
 The app list is built from public GitHub data and ships inside the APK. An app is included when:
 
-- the repository isn't a fork, unless the original is archived or hasn't had a release in a year, and the fork has at least 10 stars and ships a newer TV build
+- the repository isn't a fork, unless the fork has at least 10 stars and either:
+  - adds a TV build to an app that never had one,
+  - turns a TV app into its own app, under a different package name, or
+  - ships a newer TV build of an app that's archived or hasn't had a release in a year
 - its latest release has an APK, published in the last 3 years
 - that APK's manifest has the Android TV launcher entry
 
