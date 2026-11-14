@@ -120,7 +120,73 @@ object Catalog {
     fun sibling(a: App, i: Installed): App? =
         apps.firstOrNull { it.pkg == a.pkg && it.id != a.id && it.certSha256 != null && it.certSha256 in i.certs }
 
-    fun byId(id: String): App? = apps.firstOrNull { it.id == id }
+    fun byId(id: String): App? = apps.firstOrNull { it.id == id } ?: SelfUpdate.app?.takeIf { it.id == id }
+}
+
+object SelfUpdate {
+    private const val REPO = "wingedpanther/openshelf"
+    private const val CERT = "e574aa49fb0463eaf1229ce48b2ab201b86f806f38bda0e162a057e5b42355c2"
+    private const val ICON = "https://raw.githubusercontent.com/$REPO/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+    private const val EVERY = 12 * 60 * 60 * 1000L
+
+    var app by mutableStateOf<App?>(null)
+        private set
+
+    fun ready(ctx: Context): Boolean = app?.let { a -> Device.installed(ctx, a.pkg)?.let { it.versionCode < a.versionCode } } == true
+
+    suspend fun check(ctx: Context) {
+        val prefs = ctx.getSharedPreferences("self", Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        val fresh = now - prefs.getLong("at", 0) < EVERY
+        val cached = prefs.getString("release", null)?.takeIf { fresh }?.let { it to prefs.getString("repo", null) }
+        val (release, repo) = cached ?: withContext(Dispatchers.IO) {
+            runCatching { fetch("https://api.github.com/repos/$REPO/releases/latest") to fetch("https://api.github.com/repos/$REPO") }.getOrNull()
+        }?.also { (r, p) -> prefs.edit().putLong("at", now).putString("release", r).putString("repo", p).apply() } ?: return
+        runCatching { app = parse(ctx, JSONObject(release), repo?.let { JSONObject(it) }) }
+    }
+
+    private fun parse(ctx: Context, rel: JSONObject, repo: JSONObject?): App? {
+        val own = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+        val tag = rel.getString("tag_name")
+        val assets = rel.getJSONArray("assets")
+        val apk = (0 until assets.length()).map { assets.getJSONObject(it) }.firstOrNull { it.getString("name").endsWith(".apk") } ?: return null
+        val date = rel.getString("published_at").take(10)
+        val desc = repo?.optString("description").orEmpty()
+        return App(
+            id = "openshelf", repo = REPO, name = "Open Shelf", pkg = ctx.packageName,
+            versionCode = own.longVersionCode + if (newer(tag.removePrefix("v"), own.versionName.orEmpty())) 1 else 0,
+            versionName = tag.removePrefix("v"), minSdk = 28, room = "App stores", note = desc, desc = desc,
+            maker = REPO.substringBefore('/'), stars = repo?.optInt("stargazers_count") ?: 0, licence = "GPL-3.0",
+            archived = false, streams = false, version = tag, date = date, certSha256 = CERT,
+            art = AppArt(null, null, ICON, emptyList()),
+            apks = listOf(Apk(apk.getString("name"), "any", apk.getString("browser_download_url"), apk.getLong("size"))),
+            releases = listOf(Release(tag, date)), forkOf = null, parentStars = 0,
+        )
+    }
+
+    private fun newer(a: String, b: String): Boolean {
+        val x = a.split('.').map { it.toIntOrNull() ?: 0 }
+        val y = b.split('.').map { it.toIntOrNull() ?: 0 }
+        for (i in 0 until maxOf(x.size, y.size)) {
+            val d = x.getOrElse(i) { 0 } - y.getOrElse(i) { 0 }
+            if (d != 0) return d > 0
+        }
+        return false
+    }
+
+    private fun fetch(url: String): String {
+        val conn = URL(url).openConnection() as HttpURLConnection
+        return try {
+            conn.connectTimeout = 15_000
+            conn.readTimeout = 15_000
+            conn.setRequestProperty("Accept", "application/vnd.github+json")
+            conn.setRequestProperty("User-Agent", "OpenShelf (+https://github.com/$REPO)")
+            if (conn.responseCode !in 200..299) error("HTTP ${conn.responseCode}")
+            conn.inputStream.bufferedReader().use { it.readText() }
+        } finally {
+            conn.disconnect()
+        }
+    }
 }
 
 fun pickApk(app: App): Apk {

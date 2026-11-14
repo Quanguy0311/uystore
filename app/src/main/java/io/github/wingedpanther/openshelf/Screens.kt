@@ -137,7 +137,7 @@ fun OpenShelf() {
     val tabRequesters = remember { Tab.entries.associateWith { FocusRequester() } }
     val handoff = remember { FocusHandoff() }
     val ctx = LocalContext.current
-    LaunchedEffect(Unit) { Catalog.load(ctx) }
+    LaunchedEffect(Unit) { Catalog.load(ctx); SelfUpdate.check(ctx) }
     if (Catalog.apps.isEmpty()) {
         Box(Modifier.fillMaxSize().background(C.Wall), contentAlignment = Alignment.Center) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -945,8 +945,10 @@ private fun otherApps(ctx: Context, exclude: Set<String>): List<LocalApp> {
 private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val mine = remember(tick) {
-        Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
+    val self = SelfUpdate.app
+    val mine = remember(tick, self) {
+        val own = self?.takeIf { SelfUpdate.ready(ctx) }?.let { listOf(it to Device.installed(ctx, it.pkg)!!) }.orEmpty()
+        own + Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
             Device.installed(ctx, pkg)?.let { i -> (list.firstOrNull { it.certSha256 != null && it.certSha256 in i.certs } ?: list.firstOrNull { it.forkOf == null } ?: list.first()) to i }
         }
     }
@@ -968,13 +970,13 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                 val parts = buildList {
                     if (updatable.isNotEmpty()) add(plural(R.plurals.updates_ready, updatable.size, updatable.size))
                     if (held > 0) add(str(R.string.held_count, held))
-                    add(str(R.string.from_shelf_count, mine.size))
+                    add(str(R.string.from_shelf_count, mine.count { it.first != self }))
                     if (others != null) add(plural(R.plurals.other_apps, otherList.size, otherList.size))
                 }
                 T(parts.joinToString(" · "), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             }
             if (updatable.isNotEmpty()) {
-                Pill(str(R.string.update_all), { updatable.forEach { (a, _) -> Installer.start(ctx, a) } }, solid = true, icon = Icons.Download, requester = handoff.target)
+                Pill(str(R.string.update_all), { updatable.filter { it.first != self }.ifEmpty { updatable }.forEach { (a, _) -> Installer.start(ctx, a) } }, solid = true, icon = Icons.Download, requester = handoff.target)
             }
         }
         LazyColumn(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp)) {
