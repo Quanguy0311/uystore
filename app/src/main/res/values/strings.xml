@@ -23,6 +23,7 @@
     <string name="theme_match">Match TV</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="lang_match">Match TV</string>
 
     <string name="room_launchers">Launchers</string>
     <string name="room_screensavers">Screensavers</string>
@@ -147,6 +148,8 @@
     <string name="set_accent">Accent colour</string>
     <string name="set_accent_help">Colours the focus ring, the focused button and the dot that marks installed apps. Press OK to try the next one.</string>
     <string name="set_appearance">Appearance</string>
+    <string name="set_language">Language</string>
+    <string name="set_language_help">Match TV uses the TV’s own language when Open Shelf has it, and English when it doesn’t. App descriptions stay in English. Press OK to switch.</string>
     <string name="set_appearance_help">Light hangs the shelf on a white wall, Dark on a charcoal one for evenings. Match TV follows the TV’s own dark setting. Press OK to switch.</string>
     <string name="set_install">Install apps from Open Shelf</string>
     <string name="allowed">Allowed</string>

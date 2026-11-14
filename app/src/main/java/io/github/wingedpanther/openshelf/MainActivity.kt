@@ -8,9 +8,9 @@ import androidx.activity.compose.setContent
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Prefs.init(this)
         L.init(this)
         Images.init(this)
-        Prefs.init(this)
         Prefs.systemDark = isNight(resources.configuration)
         setContent { OpenShelf() }
     }

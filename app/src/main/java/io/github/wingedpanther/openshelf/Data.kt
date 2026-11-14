@@ -129,8 +129,25 @@ fun pickApk(app: App): Apk {
 }
 
 object L {
-    lateinit var res: android.content.res.Resources
-    fun init(ctx: Context) { res = ctx.applicationContext.resources }
+    private lateinit var app: Context
+    private var current by mutableStateOf<android.content.res.Resources?>(null)
+    val res: android.content.res.Resources get() = current!!
+
+    fun init(ctx: Context) {
+        app = ctx.applicationContext
+        use(Prefs.languages[Prefs.language])
+    }
+
+    fun use(tag: String) {
+        val locale = if (tag.isEmpty()) android.content.res.Resources.getSystem().configuration.locales[0] else Locale.forLanguageTag(tag)
+        Locale.setDefault(locale)
+        val config = android.content.res.Configuration(app.resources.configuration).apply { setLocale(locale) }
+        current = app.createConfigurationContext(config).resources
+    }
+
+    fun name(tag: String): String =
+        if (tag.isEmpty()) str(R.string.lang_match)
+        else Locale.forLanguageTag(tag).let { it.getDisplayName(it).replaceFirstChar { c -> c.titlecase(it) } }
 }
 
 fun str(id: Int, vararg args: Any): String = L.res.getString(id, *args)
@@ -310,11 +327,22 @@ object Prefs {
         accent = file.getInt("accent", 0).coerceIn(accents.indices)
         theme = file.getInt("theme", 0).coerceIn(themes.indices)
         hideStreams = file.getBoolean("hideStreams", true)
+        language = file.getInt("language", 0).coerceIn(languages.indices)
     }
 
     fun nextTheme() {
         theme = (theme + 1) % themes.size
         file.edit().putInt("theme", theme).apply()
+    }
+
+    val languages = listOf("", "en", "de")
+    var language by mutableIntStateOf(0)
+        private set
+
+    fun nextLanguage() {
+        language = (language + 1) % languages.size
+        file.edit().putInt("language", language).apply()
+        L.use(languages[language])
     }
 
     fun nextAccent() {

@@ -1090,6 +1090,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_accent_help)) { Prefs.nextAccent() },
         Setting(str(R.string.set_appearance), str(Prefs.themes[Prefs.theme]),
             str(R.string.set_appearance_help)) { Prefs.nextTheme() },
+        Setting(str(R.string.set_language), L.name(Prefs.languages[Prefs.language]),
+            str(R.string.set_language_help)) { Prefs.nextLanguage() },
         Setting(str(R.string.set_install), str(if (canInstall) R.string.allowed else R.string.not_allowed),
             str(R.string.set_install_help)) {
             Installer.openInstallPermission(ctx)
@@ -1128,7 +1130,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             T(str(R.string.settings_footer, version ?: "", Fmt.count(Catalog.apps.size)), 12.5.sp, Modifier.padding(top = 14.dp), color = C.Stone)
         }
         Spacer(Modifier.width(52.dp))
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             rows.forEachIndexed { i, s ->
                 Focusable(s.action, requester = if (i == 0) handoff.target else null, onFocus = { focusedIndex = i }) { f ->
                     Row(
@@ -1142,7 +1144,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                         Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
                     }
                 }
-                if (i == 4 || i == 7) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
+                if (i == 5 || i == 8) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             }
         }
     }

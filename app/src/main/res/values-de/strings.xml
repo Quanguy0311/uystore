@@ -23,6 +23,7 @@
     <string name="theme_match">System</string>
     <string name="theme_light">Hell</string>
     <string name="theme_dark">Dunkel</string>
+    <string name="lang_match">System</string>
 
     <string name="room_launchers">Launcher</string>
     <string name="room_screensavers">Bildschirmschoner</string>
@@ -147,6 +148,8 @@
     <string name="set_accent">Akzentfarbe</string>
     <string name="set_accent_help">Färbt Fokusring, fokussierte Taste und die Markierung installierter Apps. OK drücken um die nächste zu versuchen.</string>
     <string name="set_appearance">Aussehen</string>
+    <string name="set_language">Sprache</string>
+    <string name="set_language_help">System nutzt die Sprache des TVs, wenn Open Shelf sie hat, sonst Englisch. App-Beschreibungen bleiben auf Englisch. Drücke OK zum Wechseln.</string>
     <string name="set_appearance_help">Hell nutzt eine weißen Hintergrund, Dunkel einen anthrazitfarbenen für Abende. System folgt der Einstellung des TVs. Drücke OK zum Wechseln.</string>
     <string name="set_install">Installiere Apps von Open Shelf</string>
     <string name="allowed">Erlaubt</string>

@@ -49,8 +49,8 @@ object Installer {
         val appCtx = ctx.applicationContext
         if (busy(app.id)) return
         if (!canInstall(appCtx)) {
-            val asked = (jobs[app.id] as? Job.Failed)?.message == appCtx.getString(R.string.err_allow_install)
-            jobs[app.id] = Job.Failed(if (asked) appCtx.getString(R.string.err_allow_install_stuck, appCtx.packageName) else appCtx.getString(R.string.err_allow_install))
+            val asked = (jobs[app.id] as? Job.Failed)?.message == str(R.string.err_allow_install)
+            jobs[app.id] = Job.Failed(if (asked) str(R.string.err_allow_install_stuck, appCtx.packageName) else str(R.string.err_allow_install))
             openInstallPermission(ctx)
             return
         }
@@ -73,7 +73,7 @@ object Installer {
                     if (!handOff(appCtx, app.id, file)) throw e
                 }
             } catch (e: Exception) {
-                jobs[app.id] = Job.Failed(e.message ?: appCtx.getString(R.string.err_generic))
+                jobs[app.id] = Job.Failed(e.message ?: str(R.string.err_generic))
             }
         }
     }
@@ -89,7 +89,7 @@ object Installer {
                 setRequestProperty("User-Agent", "OpenShelf (+https://github.com/wingedpanther/openshelf)")
             }
             try {
-                if (conn.responseCode !in 200..299) throw IOException(ctx.getString(R.string.err_download_http, conn.responseCode))
+                if (conn.responseCode !in 200..299) throw IOException(str(R.string.err_download_http, conn.responseCode))
                 val total = conn.contentLengthLong.takeIf { it > 0 } ?: apk.size
                 val part = File(file.path + ".part")
                 var done = 0L
@@ -110,7 +110,7 @@ object Installer {
                         }
                     }
                 }
-                if (!part.renameTo(file)) throw IOException(ctx.getString(R.string.err_save))
+                if (!part.renameTo(file)) throw IOException(str(R.string.err_save))
             } finally {
                 conn.disconnect()
             }
@@ -120,12 +120,12 @@ object Installer {
     private fun checkSignature(ctx: Context, app: App, file: File): String? {
         val fileCerts = Device.archiveCerts(ctx, file)
         if (fileCerts.isNotEmpty() && app.certSha256 != null && app.certSha256 !in fileCerts) {
-            return ctx.getString(R.string.held_key_changed, app.name)
+            return str(R.string.held_key_changed, app.name)
         }
         val installed = Device.installed(ctx, app.pkg)
         if (installed != null && installed.certs.isNotEmpty() && fileCerts.isNotEmpty() && installed.certs.intersect(fileCerts).isEmpty()) {
-            Catalog.sibling(app, installed)?.let { return ctx.getString(R.string.held_sibling, app.name, it.repo) }
-            return ctx.getString(R.string.held_other_build, app.name)
+            Catalog.sibling(app, installed)?.let { return str(R.string.held_sibling, app.name, it.repo) }
+            return str(R.string.held_other_build, app.name)
         }
         return null
     }
