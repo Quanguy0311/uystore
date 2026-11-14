@@ -157,6 +157,37 @@ object Installer {
         jobs.remove(id)
     }.isSuccess
 
+    private var confirming: String? = null
+    private var confirmingSince = 0L
+    private val waiting = ArrayDeque<Intent>()
+
+    fun confirm(ctx: Context, result: Intent) {
+        val id = result.getStringExtra("appId") ?: return
+        if (confirming != null && confirming != id && System.currentTimeMillis() - confirmingSince < 120_000) {
+            waiting.addLast(result)
+            return
+        }
+        confirming = id
+        confirmingSince = System.currentTimeMillis()
+        val confirm = if (Build.VERSION.SDK_INT >= 33) {
+            result.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
+        } else {
+            @Suppress("DEPRECATION") result.getParcelableExtra(Intent.EXTRA_INTENT)
+        }
+        val shown = confirm != null && runCatching { ctx.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
+        if (!shown) {
+            val apk = result.getStringExtra("apk")?.let(::File)
+            if (apk == null || !handOff(ctx, id, apk)) failed(id, str(R.string.err_blocked))
+            settled(ctx, id)
+        }
+    }
+
+    fun settled(ctx: Context, id: String) {
+        if (confirming != id) return
+        confirming = null
+        waiting.removeFirstOrNull()?.let { confirm(ctx, it) }
+    }
+
     fun finished(id: String) {
         jobs.remove(id)
         Device.tick++
@@ -175,28 +206,17 @@ object Installer {
 class InstallResultReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val id = intent.getStringExtra("appId") ?: return
-        when (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)) {
-            PackageInstaller.STATUS_PENDING_USER_ACTION -> {
-                val confirm = if (Build.VERSION.SDK_INT >= 33) {
-                    intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent::class.java)
-                } else {
-                    @Suppress("DEPRECATION") intent.getParcelableExtra(Intent.EXTRA_INTENT)
-                }
-                val shown = confirm != null && runCatching { ctx.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }.isSuccess
-                if (!shown) {
-                    val apk = intent.getStringExtra("apk")?.let(::File)
-                    if (apk == null || !Installer.handOff(ctx, id, apk)) {
-                        Installer.failed(id, ctx.getString(R.string.err_blocked))
-                    }
-                }
-            }
+        val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+        if (status != PackageInstaller.STATUS_PENDING_USER_ACTION) Installer.settled(ctx, id)
+        when (status) {
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> Installer.confirm(ctx, intent)
             PackageInstaller.STATUS_SUCCESS -> Installer.finished(id)
             PackageInstaller.STATUS_FAILURE_ABORTED -> Installer.cancelled(id)
             PackageInstaller.STATUS_FAILURE_CONFLICT ->
-                Installer.failed(id, ctx.getString(R.string.err_conflict))
-            PackageInstaller.STATUS_FAILURE_STORAGE -> Installer.failed(id, ctx.getString(R.string.err_storage))
-            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> Installer.failed(id, ctx.getString(R.string.err_incompatible))
-            else -> Installer.failed(id, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ctx.getString(R.string.err_generic))
+                Installer.failed(id, str(R.string.err_conflict))
+            PackageInstaller.STATUS_FAILURE_STORAGE -> Installer.failed(id, str(R.string.err_storage))
+            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> Installer.failed(id, str(R.string.err_incompatible))
+            else -> Installer.failed(id, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: str(R.string.err_generic))
         }
     }
 }
