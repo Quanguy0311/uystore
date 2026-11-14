@@ -68,6 +68,7 @@
 
     <string name="by_maker">von %1$s</string>
     <string name="by_maker_fork">von %1$s · Fork von %2$s</string>
+    <string name="by_maker_based">von %1$s · basiert auf %2$s</string>
     <string name="fork_line">Gepflegter Fork von %1$s, aktualisiert %2$s</string>
     <string name="view_fork">Fork ansehen</string>
     <string name="fact_version">Version</string>
@@ -77,6 +78,8 @@
     <string name="view_app">Details</string>
     <string name="row_tv">Für TVs gemacht</string>
     <string name="row_tv_sub">Apps mit TV-Artwork</string>
+    <string name="row_new">Neu in Open Shelf</string>
+    <string name="row_new_sub">in den letzten zwei Monaten hinzugekommen</string>
     <string name="row_recent">Kürzlich aktualisiert</string>
     <string name="row_recent_sub">Neuerscheinungen auf GitHub</string>
     <string name="row_starred">Die meisten Sterne</string>

@@ -61,6 +61,8 @@ data class App(
     val releases: List<Release>,
     val forkOf: String?,
     val parentStars: Int,
+    val added: String? = null,
+    val basedOn: String? = null,
 ) {
     val runsHere: Boolean get() = (minSdk ?: 0) <= Build.VERSION.SDK_INT
 }
@@ -101,7 +103,7 @@ object Catalog {
             art = AppArt(art.str("banner"), art.str("feature"), art.str("icon"), shots),
             apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi"), it.getString("url"), it.getLong("size")) },
             releases = o.getJSONArray("releases").objects().map { Release(it.getString("tag"), it.getString("date")) },
-            forkOf = o.str("forkOf"), parentStars = o.optInt("parentStars"),
+            forkOf = o.str("forkOf"), parentStars = o.optInt("parentStars"), added = o.str("added"), basedOn = o.str("basedOn"),
         )
     }
 
@@ -110,6 +112,11 @@ object Catalog {
     private val STREAMS = Regex("iptv|\\bm3u8?\\b|xtream|debrid|torbox|torrserv|stremio|cloudstream|live ?tv\\b|电视直播|直播源|tvbox", RegexOption.IGNORE_CASE)
 
     fun shown(a: App) = !(Prefs.hideStreams && a.streams)
+
+    fun added(): List<App> {
+        val since = LocalDate.parse(generated.take(10)).minusDays(60).toString()
+        return visible.filter { (it.added ?: "") >= since }.sortedWith(compareByDescending<App> { it.added }.thenByDescending { it.stars })
+    }
 
     val visible: List<App> get() = apps.filter { (it.stars >= MIN_STARS || it.parentStars >= MIN_STARS) && shown(it) }
 

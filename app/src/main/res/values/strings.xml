@@ -68,6 +68,7 @@
 
     <string name="by_maker">by %1$s</string>
     <string name="by_maker_fork">by %1$s · fork of %2$s</string>
+    <string name="by_maker_based">by %1$s · based on %2$s</string>
     <string name="fork_line">Maintained fork by %1$s, updated %2$s</string>
     <string name="view_fork">View fork</string>
     <string name="fact_version">Version</string>
@@ -77,6 +78,8 @@
     <string name="view_app">View app</string>
     <string name="row_tv">Built for TV</string>
     <string name="row_tv_sub">apps that ship TV artwork</string>
+    <string name="row_new">New in Open Shelf</string>
+    <string name="row_new_sub">added in the last two months</string>
     <string name="row_recent">Recently updated</string>
     <string name="row_recent_sub">new releases on GitHub</string>
     <string name="row_starred">Most starred</string>

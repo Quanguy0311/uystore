@@ -321,6 +321,8 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
         val tv = remember(Prefs.hideStreams) { Catalog.visible.filter { it.art.banner != null && it.runsHere }.take(40) }
         val recent = remember(Prefs.hideStreams) { Catalog.visible.sortedByDescending { it.date }.take(40) }
         val starred = remember(Prefs.hideStreams) { Catalog.visible.take(40) }
+        val fresh = remember(Prefs.hideStreams) { Catalog.added().take(40) }
+        val shift = if (fresh.isEmpty()) 0 else 1
         val rooms = remember(Prefs.hideStreams) { roomsOf() }
         fun meta(a: App) = status(ctx, a)
         @Suppress("UNUSED_VARIABLE") val watch = tick
@@ -332,22 +334,27 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
             state = rowsState,
         ) {
             item {
-                ShelfRow(0, rowsState, spec, str(R.string.row_tv), str(R.string.row_tv_sub), str(R.string.row_recent)) {
+                ShelfRow(0, rowsState, spec, str(R.string.row_tv), str(R.string.row_tv_sub), str(if (fresh.isEmpty()) R.string.row_recent else R.string.row_new)) {
                     items(tv, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
+            if (fresh.isNotEmpty()) item {
+                ShelfRow(1, rowsState, spec, str(R.string.row_new), str(R.string.row_new_sub), str(R.string.row_recent)) {
+                    items(fresh, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
+                }
+            }
             item {
-                ShelfRow(1, rowsState, spec, str(R.string.row_recent), str(R.string.row_recent_sub), str(R.string.row_starred)) {
+                ShelfRow(1 + shift, rowsState, spec, str(R.string.row_recent), str(R.string.row_recent_sub), str(R.string.row_starred)) {
                     items(recent, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { Fmt.shortDate(a.date) }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
             item {
-                ShelfRow(2, rowsState, spec, str(R.string.row_starred), null, str(R.string.row_categories)) {
+                ShelfRow(2 + shift, rowsState, spec, str(R.string.row_starred), null, str(R.string.row_categories)) {
                     items(starred, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
                 }
             }
             item {
-                ShelfRow(3, rowsState, spec, str(R.string.row_categories), str(R.string.row_categories_sub), null) {
+                ShelfRow(3 + shift, rowsState, spec, str(R.string.row_categories), str(R.string.row_categories_sub), null) {
                     items(rooms, key = { it.first }) { (room, apps) -> RoomCard(room, apps.size) { openRoom(room) } }
                 }
             }
@@ -683,7 +690,12 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                         T(app.name, 24.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
                         if (installed != null) { Spacer(Modifier.width(8.dp)); Dot() }
                     }
-                    T(if (app.forkOf != null) str(R.string.by_maker_fork, app.maker, Catalog.byRepo(app.forkOf)?.name ?: app.forkOf.substringAfter('/')) else str(R.string.by_maker, app.maker), 12.5.sp, color = C.Stone, maxLines = 1)
+                    val byLine = when {
+                        app.forkOf != null -> str(R.string.by_maker_fork, app.maker, Catalog.byRepo(app.forkOf)?.name ?: app.forkOf.substringAfter('/'))
+                        app.basedOn != null -> str(R.string.by_maker_based, app.maker, Catalog.byRepo(app.basedOn)?.name ?: app.basedOn.substringAfter('/'))
+                        else -> str(R.string.by_maker, app.maker)
+                    }
+                    T(byLine, 12.5.sp, color = C.Stone, maxLines = 1)
                 }
             }
             T(app.note, 15.5.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 2)
