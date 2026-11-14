@@ -92,6 +92,7 @@
     <string name="latest_month">Latest, %1$s</string>
     <string name="archived_note">Archived by its developer. Don\'t expect more updates.</string>
     <string name="uninstall">Uninstall</string>
+    <string name="view_github">View on GitHub</string>
     <string name="prov_released">Released</string>
     <string name="prov_download">Download</string>
     <string name="prov_signing">Signing key</string>

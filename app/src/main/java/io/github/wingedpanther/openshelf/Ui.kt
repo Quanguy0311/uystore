@@ -148,6 +148,7 @@ object Icons {
     val Scale = icon("M12 4v16M7 20h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0zM19 7l-2.5 6a3 3 0 0 0 5 0z")
     val Box = icon("M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z", "M3.5 7.5L12 12l8.5-4.5M12 12v9")
     val Trash = icon("M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13")
+    val Link = icon("M14 4h6v6M20 4l-9 9", "M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10")
 }
 
 @Composable
@@ -266,6 +267,17 @@ fun launch(ctx: Context, pkg: String) {
     val pm = ctx.packageManager
     val intent = pm.getLeanbackLaunchIntentForPackage(pkg) ?: pm.getLaunchIntentForPackage(pkg) ?: return
     ctx.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
+private fun repoIntent(repo: String) =
+    Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/$repo")).addCategory(Intent.CATEGORY_BROWSABLE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+fun hasBrowser(ctx: Context): Boolean =
+    ctx.packageManager.queryIntentActivities(repoIntent("wingedpanther/openshelf"), 0)
+        .any { "frameworkpackagestubs" !in it.activityInfo.packageName }
+
+fun openRepo(ctx: Context, repo: String) {
+    runCatching { ctx.startActivity(repoIntent(repo)) }
 }
 
 fun uninstall(ctx: Context, pkg: String) {

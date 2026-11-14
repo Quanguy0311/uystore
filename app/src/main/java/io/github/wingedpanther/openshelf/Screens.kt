@@ -628,6 +628,8 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
     val gallery = remember(app.id) { app.art.gallery }
     var shot by remember(app.id) { mutableStateOf(gallery.firstOrNull()) }
     val apk = pickApk(app)
+    val browser = remember { hasBrowser(ctx) }
+    val releases = remember(app.id) { app.releases.sortedByDescending { it.tag == app.version } }
     Row(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
         Column(Modifier.width(476.dp)) {
             AnimatedContent(shot, transitionSpec = { fadeIn(tween(260)) togetherWith fadeOut(tween(160)) }, label = "shot") { s ->
@@ -646,10 +648,10 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                     }
                 }
             }
-            if (app.releases.isNotEmpty()) {
+            if (releases.isNotEmpty()) {
                 T(str(R.string.releases), 12.5.sp, Modifier.padding(top = if (gallery.size > 1) 24.dp else 28.dp), color = C.Stone, weight = FontWeight.Medium)
                 Row(Modifier.padding(top = 9.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    app.releases.take(4).forEachIndexed { i, r ->
+                    releases.take(4).forEachIndexed { i, r ->
                         Column(
                             Modifier.weight(1f).background(C.Mat, RoundedCornerShape(8.dp))
                                 .border(if (i == 0) 1.5.dp else 1.dp, if (i == 0) C.accent else C.Hair, RoundedCornerShape(8.dp))
@@ -708,6 +710,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
                 Prov(Icons.Chip, picked, apk.name)
             }
+            if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, Modifier.padding(top = 14.dp).offset(x = (-4).dp), icon = Icons.Link)
         }
     }
 }
