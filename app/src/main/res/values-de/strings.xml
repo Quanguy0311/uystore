@@ -53,6 +53,7 @@
     <string name="action_open">Öffnen</string>
 
     <string name="err_allow_install">Erlaube Open Shelf Apps zu installieren, und klicke dann erneut auf Installieren.</string>
+    <string name="err_allow_install_stuck">Lässt sich der Schalter nicht einschalten, führe am Computer aus: adb shell appops set %1$s REQUEST_INSTALL_PACKAGES allow</string>
     <string name="err_generic">Etwas ist schiefgelaufen. Versuche es erneut.</string>
     <string name="err_download_http">Download fehlgeschlagen (HTTP %1$d). Versuche es erneut.</string>
     <string name="err_save">Download konnte nicht gespeichert werden. Gib etwas Speicherplatz frei und versuche es erneut.</string>

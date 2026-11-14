@@ -323,7 +323,7 @@ fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true
 @Composable
 fun JobNote(app: App, modifier: Modifier = Modifier) {
     when (val job = Installer.jobs[app.id]) {
-        is Job.Failed -> T(job.message, 12.5.sp, modifier, color = C.Ink2, maxLines = 2)
+        is Job.Failed -> T(job.message, 12.5.sp, modifier, color = C.Ink2, maxLines = 4)
         is Job.Held -> Row(modifier, verticalAlignment = Alignment.Top) {
             Ico(Icons.ShieldAlert, 16.dp, C.Ink)
             Spacer(Modifier.width(7.dp))

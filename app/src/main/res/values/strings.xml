@@ -53,6 +53,7 @@
     <string name="action_open">Open</string>
 
     <string name="err_allow_install">Allow Open Shelf to install apps, then press Install again.</string>
+    <string name="err_allow_install_stuck">If the switch won’t turn on, run this from a computer: adb shell appops set %1$s REQUEST_INSTALL_PACKAGES allow</string>
     <string name="err_generic">Something went wrong. Try again.</string>
     <string name="err_download_http">Download failed (HTTP %1$d). Try again.</string>
     <string name="err_save">Couldn\'t save the download. Free some space and try again.</string>

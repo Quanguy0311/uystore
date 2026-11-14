@@ -49,7 +49,8 @@ object Installer {
         val appCtx = ctx.applicationContext
         if (busy(app.id)) return
         if (!canInstall(appCtx)) {
-            jobs[app.id] = Job.Failed(appCtx.getString(R.string.err_allow_install))
+            val asked = (jobs[app.id] as? Job.Failed)?.message == appCtx.getString(R.string.err_allow_install)
+            jobs[app.id] = Job.Failed(if (asked) appCtx.getString(R.string.err_allow_install_stuck, appCtx.packageName) else appCtx.getString(R.string.err_allow_install))
             openInstallPermission(ctx)
             return
         }
