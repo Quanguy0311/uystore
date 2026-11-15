@@ -1156,7 +1156,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_apk_help, Build.SUPPORTED_ABIS.joinToString(", "))),
         Setting(str(R.string.set_key), str(R.string.set_key_value),
             str(R.string.set_key_help)),
-        Setting(str(R.string.set_self_update), str(if (Prefs.autoCheckSelf) R.string.allowed else R.string.not_allowed),
+        Setting(str(R.string.set_self_update), str(if (Prefs.autoCheckSelf) R.string.on else R.string.off),
             str(R.string.set_self_update_help)) { Prefs.toggleAutoCheck() },
         Setting(str(R.string.set_catalog), str(R.string.catalog_value, Fmt.count(Catalog.apps.size), Fmt.shortDate(Catalog.generated)),
             str(R.string.catalog_help, Fmt.date(Catalog.generated))),

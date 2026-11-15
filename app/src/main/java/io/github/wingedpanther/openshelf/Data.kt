@@ -141,7 +141,6 @@ object SelfUpdate {
 
     fun ready(ctx: Context): Boolean = app?.let { a -> Device.installed(ctx, a.pkg)?.let { it.versionCode < a.versionCode } } == true
 
-    // The prompt is suppressed for a release once the user picks "Later" for that exact tag.
     fun shouldPrompt(ctx: Context): Boolean =
         ready(ctx) && app?.let { ignoredTag(ctx) != it.version } == true
 

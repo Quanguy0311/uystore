@@ -19,8 +19,8 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 - When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
-- In English and German, with a language switch in Settings
-- Updates itself: new versions of Open Shelf show up in My Apps
+- In English, German, Japanese and Chinese (Simplified and Traditional), with a language switch in Settings
+- Updates itself: when a new version is out, Open Shelf offers to install it
 
 ## Screenshots
 

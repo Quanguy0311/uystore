@@ -184,6 +184,8 @@
     <string name="self_update_title">Update available</string>
     <string name="self_update_body">Open Shelf %2$s is available. You are on %1$s.</string>
     <string name="self_update_later">Later</string>
-    <string name="set_self_update">Auto-check for updates</string>
+    <string name="set_self_update">Check for Open Shelf updates</string>
     <string name="set_self_update_help">Checks GitHub for a new Open Shelf release when the app opens. A prompt asks before anything is downloaded.</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
 </resources>

@@ -176,4 +176,11 @@
     <string name="about_value">Open Shelf %1$s</string>
     <string name="about_help">Open Shelf 是基於 GPL-3.0 的開源軟體，位於 github.com/wingedpanther/openshelf。應用程式名稱、美術圖和版本發布來自各專案的 GitHub 儲存庫。</string>
     <string name="settings_footer">版本 %1$s · %2$s 個應用程式</string>
+    <string name="on">開</string>
+    <string name="off">關</string>
+    <string name="self_update_title">有可用的更新</string>
+    <string name="self_update_body">Open Shelf %2$s 已推出。你目前使用的是 %1$s。</string>
+    <string name="self_update_later">稍後</string>
+    <string name="set_self_update">檢查 Open Shelf 更新</string>
+    <string name="set_self_update_help">開啟應用程式時在 GitHub 上檢查 Open Shelf 的新版本。下載前會先詢問你。</string>
 </resources>
