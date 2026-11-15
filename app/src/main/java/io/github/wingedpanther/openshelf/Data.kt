@@ -408,7 +408,7 @@ object Prefs {
         file.edit().putInt("theme", theme).apply()
     }
 
-    val languages = listOf("", "en", "de")
+    val languages = listOf("", "en", "de", "zh-CN", "zh-TW", "ja")
     var language by mutableIntStateOf(0)
         private set
 
