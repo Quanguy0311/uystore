@@ -141,6 +141,18 @@ object SelfUpdate {
 
     fun ready(ctx: Context): Boolean = app?.let { a -> Device.installed(ctx, a.pkg)?.let { it.versionCode < a.versionCode } } == true
 
+    // The prompt is suppressed for a release once the user picks "Later" for that exact tag.
+    fun shouldPrompt(ctx: Context): Boolean =
+        ready(ctx) && app?.let { ignoredTag(ctx) != it.version } == true
+
+    fun ignore(ctx: Context, tag: String) {
+        selfPrefs(ctx).edit().putString("ignored", tag).apply()
+    }
+
+    private fun ignoredTag(ctx: Context): String? = selfPrefs(ctx).getString("ignored", null)
+
+    private fun selfPrefs(ctx: Context) = ctx.getSharedPreferences("self", Context.MODE_PRIVATE)
+
     suspend fun check(ctx: Context) {
         val prefs = ctx.getSharedPreferences("self", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
@@ -383,9 +395,17 @@ object Prefs {
     var hideStreams by mutableStateOf(true)
         private set
 
+    var autoCheckSelf by mutableStateOf(true)
+        private set
+
     fun toggleStreams() {
         hideStreams = !hideStreams
         file.edit().putBoolean("hideStreams", hideStreams).apply()
+    }
+
+    fun toggleAutoCheck() {
+        autoCheckSelf = !autoCheckSelf
+        file.edit().putBoolean("autoCheckSelf", autoCheckSelf).apply()
     }
 
     val themes = listOf(R.string.theme_match, R.string.theme_light, R.string.theme_dark)
@@ -400,6 +420,7 @@ object Prefs {
         accent = file.getInt("accent", 0).coerceIn(accents.indices)
         theme = file.getInt("theme", 0).coerceIn(themes.indices)
         hideStreams = file.getBoolean("hideStreams", true)
+        autoCheckSelf = file.getBoolean("autoCheckSelf", true)
         language = file.getInt("language", 0).coerceIn(languages.indices)
     }
 

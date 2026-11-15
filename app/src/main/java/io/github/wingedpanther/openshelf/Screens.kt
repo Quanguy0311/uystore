@@ -111,6 +111,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
@@ -137,7 +138,10 @@ fun OpenShelf() {
     val tabRequesters = remember { Tab.entries.associateWith { FocusRequester() } }
     val handoff = remember { FocusHandoff() }
     val ctx = LocalContext.current
-    LaunchedEffect(Unit) { Catalog.load(ctx); SelfUpdate.check(ctx) }
+    LaunchedEffect(Device.tick) {
+        Catalog.load(ctx)
+        if (Prefs.autoCheckSelf) SelfUpdate.check(ctx)
+    }
     if (Catalog.apps.isEmpty()) {
         Box(Modifier.fillMaxSize().background(C.Wall), contentAlignment = Alignment.Center) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -191,11 +195,49 @@ fun OpenShelf() {
         )
     }
 
+    val selfApp = SelfUpdate.app
+    var selfDismissed by remember(selfApp?.version) { mutableStateOf(false) }
+    if (selfApp != null && !selfDismissed && SelfUpdate.shouldPrompt(ctx)) {
+        SelfUpdateDialog(
+            app = selfApp,
+            currentVersion = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty(),
+            onUpdate = { selfDismissed = true; Installer.start(ctx, selfApp) },
+            onLater = { selfDismissed = true; SelfUpdate.ignore(ctx, selfApp.version) },
+        )
+    }
+
     LaunchedEffect(handoff.pending, page, room, tab) {
         if (handoff.pending) {
             delay(60)
             runCatching { handoff.target.requestFocus() }
             handoff.pending = false
+        }
+    }
+}
+
+@Composable
+private fun SelfUpdateDialog(app: App, currentVersion: String, onUpdate: () -> Unit, onLater: () -> Unit) {
+    val updateRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onLater) {
+        Column(
+            Modifier.width(440.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            Image(painterResource(C.mark), null, Modifier.size(40.dp))
+            T(str(R.string.self_update_title), 22.sp, Modifier.padding(top = 16.dp),
+                weight = FontWeight.SemiBold, tight = true)
+            T(str(R.string.self_update_body, currentVersion, app.versionName ?: app.version),
+                14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+            Row(
+                Modifier.padding(top = 22.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Pill(str(R.string.self_update_later), onLater)
+                Spacer(Modifier.width(10.dp))
+                Pill(str(R.string.action_update), onUpdate, solid = true,
+                    icon = Icons.Download, requester = updateRequester)
+            }
+            LaunchedEffect(Unit) { runCatching { updateRequester.requestFocus() } }
         }
     }
 }
@@ -1114,6 +1156,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_apk_help, Build.SUPPORTED_ABIS.joinToString(", "))),
         Setting(str(R.string.set_key), str(R.string.set_key_value),
             str(R.string.set_key_help)),
+        Setting(str(R.string.set_self_update), str(if (Prefs.autoCheckSelf) R.string.allowed else R.string.not_allowed),
+            str(R.string.set_self_update_help)) { Prefs.toggleAutoCheck() },
         Setting(str(R.string.set_catalog), str(R.string.catalog_value, Fmt.count(Catalog.apps.size), Fmt.shortDate(Catalog.generated)),
             str(R.string.catalog_help, Fmt.date(Catalog.generated))),
         Setting(str(R.string.set_stars), "${Catalog.MIN_STARS}",
@@ -1158,7 +1202,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                         Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
                     }
                 }
-                if (i == 5 || i == 8) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
+                if (i == 6 || i == 9) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             }
         }
     }

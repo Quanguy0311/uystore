@@ -180,4 +180,10 @@
     <string name="about_value">Open Shelf %1$s</string>
     <string name="about_help">Open Shelf is open source under GPL-3.0, at github.com/wingedpanther/openshelf. App names, art and releases come from each project’s GitHub repository.</string>
     <string name="settings_footer">Version %1$s · %2$s apps</string>
+
+    <string name="self_update_title">Update available</string>
+    <string name="self_update_body">Open Shelf %2$s is available. You are on %1$s.</string>
+    <string name="self_update_later">Later</string>
+    <string name="set_self_update">Auto-check for updates</string>
+    <string name="set_self_update_help">Checks GitHub for a new Open Shelf release when the app opens. A prompt asks before anything is downloaded.</string>
 </resources>
