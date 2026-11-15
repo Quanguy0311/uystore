@@ -180,4 +180,10 @@
     <string name="about_value">Open Shelf %1$s</string>
     <string name="about_help">Open Shelf ist Open Source (GPL-3.0) verfügbar auf github.com/wingedpanther/openshelf. App-Namen, Grafiken und Veröffentlichungen stammen aus den GitHub-Repositorys der Projekte.</string>
     <string name="settings_footer">Version %1$s · %2$s Apps</string>
+
+    <string name="self_update_title">Update verfügbar</string>
+    <string name="self_update_body">Open Shelf %2$s ist verfügbar. Du verwendest %1$s.</string>
+    <string name="self_update_later">Später</string>
+    <string name="set_self_update">Automatisch nach Updates suchen</string>
+    <string name="set_self_update_help">Prüft beim Öffnen der App auf GitHub nach einer neuen Open-Shelf-Version. Vor dem Download wirst du gefragt.</string>
 </resources>
