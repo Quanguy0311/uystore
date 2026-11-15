@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_discover">探索</string>
+    <string name="tab_categories">カテゴリ</string>
+    <string name="tab_search">検索</string>
+    <string name="tab_mine">マイアプリ</string>
+    <string name="tab_settings">設定</string>
+
+    <string name="fmt_date">yyyy年M月d日</string>
+    <string name="fmt_short_date">M月d日</string>
+    <string name="fmt_month_year">yyyy年M月</string>
+
+    <string name="abi_arm64">ARM 64ビット</string>
+    <string name="abi_arm32">ARM 32ビット</string>
+    <string name="abi_x86_64">x86 64ビット</string>
+
+    <string name="accent_sage">セージ</string>
+    <string name="accent_red">ギャラリーレッド</string>
+    <string name="accent_ochre">オーカー</string>
+    <string name="accent_plum">プラム</string>
+    <string name="accent_none">なし</string>
+
+    <string name="theme_match">テレビに合わせる</string>
+    <string name="theme_light">ライト</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="lang_match">テレビに合わせる</string>
+
+    <string name="room_launchers">ランチャー</string>
+    <string name="room_screensavers">スクリーンセーバー</string>
+    <string name="room_vpn">VPNとネットワーク</string>
+    <string name="room_streaming">ストリーミング</string>
+    <string name="room_stores">アプリストア</string>
+    <string name="room_games">ゲーム</string>
+    <string name="room_music">音楽</string>
+    <string name="room_video">動画</string>
+    <string name="room_home">スマートホーム</string>
+    <string name="room_photos">写真</string>
+    <string name="room_reading">読書</string>
+    <string name="room_learning">学習</string>
+    <string name="room_chat">チャットとソーシャル</string>
+    <string name="room_ai">AI</string>
+    <string name="room_browsers">ブラウザ</string>
+    <string name="room_files">ファイルとダウンロード</string>
+    <string name="room_tools">ツール</string>
+    <string name="room_other">その他</string>
+
+    <string name="needs_android">%1$sが必要</string>
+    <string name="job_downloading">ダウンロード中 %1$d%%</string>
+    <string name="job_checking">署名を確認中</string>
+    <string name="job_installing">インストール中</string>
+    <string name="action_install_size">インストール · %1$s</string>
+    <string name="action_update_size">更新 · %1$s</string>
+    <string name="action_update">更新</string>
+    <string name="action_open">開く</string>
+
+    <string name="err_allow_install">Open Shelfによるアプリのインストールを許可してから、もう一度インストールを押してください。</string>
+    <string name="err_allow_install_stuck">スイッチをオンにできない場合は、パソコンから次のコマンドを実行してください: adb shell appops set %1$s REQUEST_INSTALL_PACKAGES allow</string>
+    <string name="err_generic">問題が発生しました。もう一度お試しください。</string>
+    <string name="err_download_http">ダウンロードに失敗しました（HTTP %1$d）。もう一度お試しください。</string>
+    <string name="err_save">ダウンロードを保存できませんでした。空き容量を増やしてからもう一度お試しください。</string>
+    <string name="err_blocked">このテレビはAndroidのインストール画面をブロックしました。もう一度試すか、パソコンからadbでAPKをインストールしてください。</string>
+    <string name="err_conflict">インストール済みのコピーは別の者により署名されています。先にアンインストールしてから、ここからインストールしてください。</string>
+    <string name="err_storage">このテレビに十分な空き容量がありません。</string>
+    <string name="err_incompatible">このビルドはこのテレビでは動作しません。</string>
+    <string name="held_key_changed">このファイルは、Open Shelfが%1$s用に記録したものとは異なるキーで署名されています。確認のため保留されています。</string>
+    <string name="held_sibling">このテレビの%1$sは%2$sビルドです。先にアンインストールしてから、こちらをインストールしてください。</string>
+    <string name="held_other_build">このテレビの%1$sは別の者のビルドから入手したものです。Androidはこのファイルで更新できません。</string>
+
+    <string name="by_maker">提供：%1$s</string>
+    <string name="by_maker_fork">提供：%1$s · %2$sのフォーク</string>
+    <string name="by_maker_based">提供：%1$s · %2$sベース</string>
+    <string name="fork_line">%1$sが保守するフォーク、%2$s更新</string>
+    <string name="view_fork">フォークを表示</string>
+    <string name="fact_version">バージョン</string>
+    <string name="fact_licence">ライセンス</string>
+    <string name="fact_stars">スター</string>
+    <string name="licence_unknown">リポジトリを確認</string>
+    <string name="view_app">アプリを表示</string>
+    <string name="row_tv">テレビ向け</string>
+    <string name="row_tv_sub">テレビ用アートワークを備えたアプリ</string>
+    <string name="row_new">Open Shelfの新着</string>
+    <string name="row_new_sub">過去2か月間に追加</string>
+    <string name="row_recent">最近更新</string>
+    <string name="row_recent_sub">GitHubの新しいリリース</string>
+    <string name="row_starred">スター数順</string>
+    <string name="row_categories">カテゴリ</string>
+    <string name="row_categories_sub">アプリの用途で参照</string>
+    <plurals name="apps">
+        <item quantity="other">%1$d個のアプリ</item>
+    </plurals>
+    <string name="categories_summary">%1$dカテゴリ、%2$s個のアプリ</string>
+    <string name="status_update_ready">更新の準備完了</string>
+    <string name="status_installed">インストール済み</string>
+
+    <string name="releases">リリース</string>
+    <string name="latest_month">最新、%1$s</string>
+    <string name="archived_note">開発者によりアーカイブされています。今後の更新は期待できません。</string>
+    <string name="uninstall">アンインストール</string>
+    <string name="view_github">GitHubで表示</string>
+    <string name="prov_released">リリース日</string>
+    <string name="prov_download">ダウンロード</string>
+    <string name="prov_signing">署名キー</string>
+    <string name="sig_unrecorded">まだ記録されていません。Androidはインストール済みのコピーに対して更新を確認します。</string>
+    <string name="sig_checked">インストール前に開発者のキーと照合</string>
+    <string name="sig_mismatch">開発者のキーと異なります。更新は保留されています。</string>
+    <string name="sig_sibling">このテレビには%1$sビルドがあります。切り替えるにはアンインストールしてください。</string>
+    <string name="sig_matches">開発者のキーと一致</string>
+    <string name="file_picked_any">すべてのテレビ用に選択されたファイル</string>
+    <string name="file_picked_abi">このテレビ用に選択されたファイル（%1$s）</string>
+    <string name="installed_version">インストール済みバージョン %1$s</string>
+    <string name="needs_space">%1$sが必要です。このテレビの空き容量は%2$sです。</string>
+
+    <string name="search_hint_editing">アプリ名または用途を入力</string>
+    <string name="search_hint">アプリを検索</string>
+    <string name="search_press_ok">OKを押して入力</string>
+    <string name="search_ok_edit">OKで編集</string>
+    <string name="search_try">試す</string>
+    <string name="search_clear">クリア</string>
+    <string name="search_none">「%1$s」に一致するアプリはありません</string>
+    <plurals name="search_results">
+        <item quantity="other">「%2$s」のアプリ %1$d件</item>
+    </plurals>
+    <string name="search_tip">より短い単語か、「動画プレーヤー」のようにアプリの用途を試してください。</string>
+    <string name="search_matches">一致：</string>
+
+    <string name="mine_title">マイアプリ</string>
+    <plurals name="updates_ready">
+        <item quantity="other">%1$d件の更新の準備完了</item>
+    </plurals>
+    <string name="held_count">%1$d件が確認のため保留中</string>
+    <string name="from_shelf_count">%1$d件がOpen Shelfから</string>
+    <plurals name="other_apps">
+        <item quantity="other">このテレビのその他のアプリ %1$d件</item>
+    </plurals>
+    <string name="update_all">すべて更新</string>
+    <string name="section_from_shelf">Open Shelfから</string>
+    <string name="mine_empty">Open Shelfからインストールしたアプリが更新付きでここに表示されます。</string>
+    <string name="find_app">アプリを探す</string>
+    <string name="held_sub">%1$s · 異なるキーで署名</string>
+    <string name="update_held">更新保留</string>
+    <string name="review">確認</string>
+    <string name="up_to_date">最新です</string>
+    <string name="details">詳細</string>
+    <string name="section_other">このテレビのその他のアプリ</string>
+    <string name="not_in_list">Open Shelfのリストにありません</string>
+
+    <string name="set_accent">アクセントカラー</string>
+    <string name="set_accent_help">フォーカスリング、フォーカスされたボタン、インストール済みアプリを示す点に色を付けます。OKを押して次の色を試してください。</string>
+    <string name="set_appearance">外観</string>
+    <string name="set_language">言語</string>
+    <string name="set_language_help">「テレビに合わせる」は、Open Shelfが対応している場合はテレビの言語を使用し、対応していない場合は英語を使用します。アプリの説明は英語のままです。OKを押して切り替えます。</string>
+    <string name="set_appearance_help">ライトは白い壁に棚を掛け、ダークは夜間用にチャコールの壁を使用します。テレビに合わせるはテレビ自体のダーク設定に従います。OKを押して切り替えます。</string>
+    <string name="set_install">Open Shelfからアプリをインストール</string>
+    <string name="allowed">許可済み</string>
+    <string name="not_allowed">まだ許可されていません</string>
+    <string name="set_install_help">Androidは一度だけ許可を求めます。その後Open Shelfはアプリをインストールおよび更新でき、各インストールでは引き続き確認を求めます。</string>
+    <string name="set_apk">APKタイプ</string>
+    <string name="apk_auto">自動 · %1$s</string>
+    <string name="set_apk_help">多くのアプリはチップの種類ごとに異なるファイルを公開しています。Open Shelfはこのテレビに合うものを選びます。ここで対応：%1$s。</string>
+    <string name="set_key">アプリの署名キーが変更された場合</string>
+    <string name="set_key_value">更新を保留</string>
+    <string name="set_key_help">すべてのリリースは開発者により署名されています。新しいファイルが別の者により署名されている場合、Open Shelfは現在のバージョンを保持し、インストールしません。</string>
+    <string name="set_catalog">カタログ</string>
+    <string name="catalog_value">%1$s個のアプリ · %2$s</string>
+    <string name="catalog_help">APKを公開し、過去3年間にリリースのあるGitHub上のすべてのAndroidテレビアプリ。%1$sに確認。このバージョンはアプリ内にリストを同梱しています。</string>
+    <string name="set_stars">次のスター数未満のアプリを非表示</string>
+    <string name="set_stars_help">非常に新しい、またはあまり使われていないアプリを探索から除外します。%1$s個のアプリが非表示です。検索では正確な名前で引き続き見つけられます。</string>
+    <string name="set_streams">IPTVとストリームアプリを非表示</string>
+    <string name="streams_on">オン · %1$s件を非表示</string>
+    <string name="streams_off">オフ</string>
+    <string name="set_streams_help">IPTVプレーヤー、ライブテレビチャンネルアプリ、debrid、トレント、Stremioのストリーミングクライアントを非表示にします。これらはオープンソースですが、自分で用意したストリームを再生します。OKを押して切り替えます。</string>
+    <string name="set_cache">ダウンロードキャッシュ</string>
+    <string name="cache_value">%1$s · クリア</string>
+    <string name="set_cache_help">ダウンロードしたAPKファイルはここに保持され、再ダウンロードせずに再インストールできます。OKを押してクリアしてください。</string>
+    <string name="set_about">このアプリについて</string>
+    <string name="about_value">Open Shelf %1$s</string>
+    <string name="about_help">Open ShelfはGPL-3.0に基づくオープンソースで、github.com/wingedpanther/openshelfにあります。アプリ名、アートワーク、リリースは各プロジェクトのGitHubリポジトリから取得されます。</string>
+    <string name="settings_footer">バージョン %1$s · %2$s個のアプリ</string>
+</resources>

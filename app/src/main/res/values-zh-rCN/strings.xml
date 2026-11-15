@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_discover">探索</string>
+    <string name="tab_categories">分类</string>
+    <string name="tab_search">搜索</string>
+    <string name="tab_mine">我的应用</string>
+    <string name="tab_settings">设置</string>
+
+    <string name="fmt_date">yyyy年M月d日</string>
+    <string name="fmt_short_date">M月d日</string>
+    <string name="fmt_month_year">yyyy年M月</string>
+
+    <string name="abi_arm64">ARM 64 位</string>
+    <string name="abi_arm32">ARM 32 位</string>
+    <string name="abi_x86_64">x86 64 位</string>
+
+    <string name="accent_sage">鼠尾草绿</string>
+    <string name="accent_red">画廊红</string>
+    <string name="accent_ochre">赭石</string>
+    <string name="accent_plum">梅紫</string>
+    <string name="accent_none">无</string>
+
+    <string name="theme_match">跟随电视</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="lang_match">跟随电视</string>
+
+    <string name="room_launchers">启动器</string>
+    <string name="room_screensavers">屏保</string>
+    <string name="room_vpn">VPN 和网络</string>
+    <string name="room_streaming">流媒体</string>
+    <string name="room_stores">应用商店</string>
+    <string name="room_games">游戏</string>
+    <string name="room_music">音乐</string>
+    <string name="room_video">视频</string>
+    <string name="room_home">智能家居</string>
+    <string name="room_photos">照片</string>
+    <string name="room_reading">阅读</string>
+    <string name="room_learning">学习</string>
+    <string name="room_chat">聊天和社交</string>
+    <string name="room_ai">AI</string>
+    <string name="room_browsers">浏览器</string>
+    <string name="room_files">文件和下载</string>
+    <string name="room_tools">工具</string>
+    <string name="room_other">其他</string>
+
+    <string name="needs_android">需要 %1$s</string>
+    <string name="job_downloading">正在下载 %1$d%%</string>
+    <string name="job_checking">正在检查签名</string>
+    <string name="job_installing">正在安装</string>
+    <string name="action_install_size">安装 · %1$s</string>
+    <string name="action_update_size">更新 · %1$s</string>
+    <string name="action_update">更新</string>
+    <string name="action_open">打开</string>
+
+    <string name="err_allow_install">请允许 Open Shelf 安装应用，然后再次按“安装”。</string>
+    <string name="err_allow_install_stuck">如果开关无法打开，请在电脑上运行：adb shell appops set %1$s REQUEST_INSTALL_PACKAGES allow</string>
+    <string name="err_generic">出了点问题，请重试。</string>
+    <string name="err_download_http">下载失败（HTTP %1$d），请重试。</string>
+    <string name="err_save">无法保存下载内容，请释放一些空间后重试。</string>
+    <string name="err_blocked">这台电视屏蔽了 Android 的安装界面，请重试，或通过电脑使用 adb 安装 APK。</string>
+    <string name="err_conflict">已安装的副本由他人签名。请先卸载，再从此处安装。</string>
+    <string name="err_storage">这台电视的存储空间不足。</string>
+    <string name="err_incompatible">此版本无法在这台电视上运行。</string>
+    <string name="held_key_changed">此文件的签名密钥与 Open Shelf 为 %1$s 记录的密钥不同，已暂停以供审核。</string>
+    <string name="held_sibling">这台电视上的 %1$s 是 %2$s 版本。请先卸载，再安装此版本。</string>
+    <string name="held_other_build">这台电视上的 %1$s 来自他人的构建版本，Android 无法用此文件更新它。</string>
+
+    <string name="by_maker">作者：%1$s</string>
+    <string name="by_maker_fork">作者：%1$s · 复刻自 %2$s</string>
+    <string name="by_maker_based">作者：%1$s · 基于 %2$s</string>
+    <string name="fork_line">由 %1$s 维护的复刻版本，更新于 %2$s</string>
+    <string name="view_fork">查看复刻</string>
+    <string name="fact_version">版本</string>
+    <string name="fact_licence">许可证</string>
+    <string name="fact_stars">星标</string>
+    <string name="licence_unknown">查看代码仓库</string>
+    <string name="view_app">查看应用</string>
+    <string name="row_tv">专为电视打造</string>
+    <string name="row_tv_sub">提供电视版配图的应用</string>
+    <string name="row_new">Open Shelf 新增</string>
+    <string name="row_new_sub">最近两个月内加入</string>
+    <string name="row_recent">最近更新</string>
+    <string name="row_recent_sub">GitHub 上的新版本</string>
+    <string name="row_starred">最多星标</string>
+    <string name="row_categories">分类</string>
+    <string name="row_categories_sub">按应用用途浏览</string>
+    <plurals name="apps">
+        <item quantity="other">%1$d 个应用</item>
+    </plurals>
+    <string name="categories_summary">%1$d 个分类，%2$s 个应用</string>
+    <string name="status_update_ready">更新已就绪</string>
+    <string name="status_installed">已安装</string>
+
+    <string name="releases">版本发布</string>
+    <string name="latest_month">最新，%1$s</string>
+    <string name="archived_note">已被开发者归档，预计不会再有更新。</string>
+    <string name="uninstall">卸载</string>
+    <string name="view_github">在 GitHub 上查看</string>
+    <string name="prov_released">发布时间</string>
+    <string name="prov_download">下载</string>
+    <string name="prov_signing">签名密钥</string>
+    <string name="sig_unrecorded">尚未记录。Android 仍会根据你已安装的副本来检查更新。</string>
+    <string name="sig_checked">安装前已对照开发者密钥进行检查</string>
+    <string name="sig_mismatch">与开发者密钥不同，更新已暂停。</string>
+    <string name="sig_sibling">这台电视上是 %1$s 版本，卸载后才能切换。</string>
+    <string name="sig_matches">与开发者密钥匹配</string>
+    <string name="file_picked_any">为所有电视选择的文件</string>
+    <string name="file_picked_abi">为这台电视选择的文件（%1$s）</string>
+    <string name="installed_version">已安装版本 %1$s</string>
+    <string name="needs_space">需要 %1$s，这台电视剩余 %2$s。</string>
+
+    <string name="search_hint_editing">输入应用名称或其功能</string>
+    <string name="search_hint">搜索应用</string>
+    <string name="search_press_ok">按 OK 键输入</string>
+    <string name="search_ok_edit">按 OK 编辑</string>
+    <string name="search_try">试试</string>
+    <string name="search_clear">清除</string>
+    <string name="search_none">没有应用匹配“%1$s”</string>
+    <plurals name="search_results">
+        <item quantity="other">找到 %1$d 个与“%2$s”相关的应用</item>
+    </plurals>
+    <string name="search_tip">试试更短的词，或应用的功能，例如“视频播放器”。</string>
+    <string name="search_matches">匹配：</string>
+
+    <string name="mine_title">我的应用</string>
+    <plurals name="updates_ready">
+        <item quantity="other">%1$d 个更新已就绪</item>
+    </plurals>
+    <string name="held_count">%1$d 个已暂停审核</string>
+    <string name="from_shelf_count">%1$d 个来自 Open Shelf</string>
+    <plurals name="other_apps">
+        <item quantity="other">这台电视上的 %1$d 个其他应用</item>
+    </plurals>
+    <string name="update_all">全部更新</string>
+    <string name="section_from_shelf">来自 Open Shelf</string>
+    <string name="mine_empty">你从 Open Shelf 安装的应用会显示在这里，并提供更新。</string>
+    <string name="find_app">查找应用</string>
+    <string name="held_sub">%1$s · 签名密钥不同</string>
+    <string name="update_held">更新已暂停</string>
+    <string name="review">审核</string>
+    <string name="up_to_date">已是最新</string>
+    <string name="details">详情</string>
+    <string name="section_other">这台电视上的其他应用</string>
+    <string name="not_in_list">不在 Open Shelf 列表中</string>
+
+    <string name="set_accent">强调色</string>
+    <string name="set_accent_help">为焦点环、聚焦按钮以及标记已安装应用的圆点着色。按 OK 键尝试下一个颜色。</string>
+    <string name="set_appearance">外观</string>
+    <string name="set_language">语言</string>
+    <string name="set_language_help">“跟随电视”会在 Open Shelf 支持该语言时使用电视本身的语言，不支持时使用英语。应用描述保持英文。按 OK 键切换。</string>
+    <string name="set_appearance_help">浅色模式将货架挂在白墙之上，深色模式则使用炭灰墙以适合夜晚。跟随电视会遵循电视自身的深色设置。按 OK 键切换。</string>
+    <string name="set_install">安装来自 Open Shelf 的应用</string>
+    <string name="allowed">已允许</string>
+    <string name="not_allowed">尚未允许</string>
+    <string name="set_install_help">Android 会要求你允许一次。之后 Open Shelf 即可安装和更新应用，每次安装仍会要求你确认。</string>
+    <string name="set_apk">APK 类型</string>
+    <string name="apk_auto">自动 · %1$s</string>
+    <string name="set_apk_help">许多应用为每种芯片发布不同的文件。Open Shelf 会选择适合这台电视的文件。此处支持：%1$s。</string>
+    <string name="set_key">如果应用的签名密钥发生变化</string>
+    <string name="set_key_value">暂停更新</string>
+    <string name="set_key_help">每个版本都由开发者签名。如果新文件由他人签名，Open Shelf 会保留你的当前版本而不安装。</string>
+    <string name="set_catalog">目录</string>
+    <string name="catalog_value">%1$s 个应用 · %2$s</string>
+    <string name="catalog_help">GitHub 上每个发布 APK 且在最近 3 年内有版本发布的 Android 电视应用。检查于 %1$s。此版本在应用内内置了该列表。</string>
+    <string name="set_stars">隐藏星标数少于以下数值的应用</string>
+    <string name="set_stars_help">可让非常新或很少使用的应用不出现在“探索”中。有 %1$s 个应用被隐藏，搜索仍可通过其确切名称找到它们。</string>
+    <string name="set_streams">隐藏 IPTV 和流媒体应用</string>
+    <string name="streams_on">开 · 已隐藏 %1$s 个</string>
+    <string name="streams_off">关</string>
+    <string name="set_streams_help">隐藏 IPTV 播放器、直播电视频道应用以及 debrid、种子或 Stremio 流媒体客户端。它们是开源的，但播放的是你自己提供的流媒体。按 OK 键切换。</string>
+    <string name="set_cache">下载缓存</string>
+    <string name="cache_value">%1$s · 清除</string>
+    <string name="set_cache_help">下载的 APK 文件会保存在这里，以便你无需重新下载即可重新安装。按 OK 键清除。</string>
+    <string name="set_about">关于</string>
+    <string name="about_value">Open Shelf %1$s</string>
+    <string name="about_help">Open Shelf 是基于 GPL-3.0 的开源软件，位于 github.com/wingedpanther/openshelf。应用名称、配图和版本发布来自各项目的 GitHub 代码仓库。</string>
+    <string name="settings_footer">版本 %1$s · %2$s 个应用</string>
+</resources>
