@@ -13,9 +13,11 @@ import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -78,24 +80,58 @@ object Installer {
         }
     }
 
+    private const val MAX_TRIES = 3
+
+    private class NonRetryable(msg: String) : IOException(msg)
+
     private suspend fun download(ctx: Context, apk: Apk, file: File, progress: (Long, Long) -> Unit) {
         if (file.exists() && file.length() == apk.size) return
+        file.parentFile?.mkdirs()
+        val part = File(file.path + ".part")
+        var attempt = 0
+        while (true) {
+            try {
+                downloadAttempt(ctx, apk, part, progress)
+                if (!part.renameTo(file)) throw IOException(str(R.string.err_save))
+                return
+            } catch (e: Exception) {
+                if (++attempt >= MAX_TRIES || e is NonRetryable) throw e
+                delay(500L * (1L shl (attempt - 1)))
+            }
+        }
+    }
+
+    private suspend fun downloadAttempt(ctx: Context, apk: Apk, part: File, progress: (Long, Long) -> Unit) {
         withContext(Dispatchers.IO) {
-            file.parentFile?.mkdirs()
+            val have = part.length()
             val conn = (URL(apk.url).openConnection() as HttpURLConnection).apply {
                 instanceFollowRedirects = true
                 connectTimeout = 15_000
                 readTimeout = 30_000
                 setRequestProperty("User-Agent", "OpenShelf (+https://github.com/wingedpanther/openshelf)")
+                if (have > 0) setRequestProperty("Range", "bytes=$have-")
             }
             try {
-                if (conn.responseCode !in 200..299) throw IOException(str(R.string.err_download_http, conn.responseCode))
-                val total = conn.contentLengthLong.takeIf { it > 0 } ?: apk.size
-                val part = File(file.path + ".part")
-                var done = 0L
-                var lastShown = 0L
+                val code = conn.responseCode
+                val resume = when {
+                    code == HttpURLConnection.HTTP_PARTIAL -> true
+                    code in 200..299 -> false
+                    code == 416 -> { part.delete(); throw IOException(str(R.string.err_download_http, code)) }
+                    code in 500..599 || code == 408 || code == 429 -> throw IOException(str(R.string.err_download_http, code))
+                    else -> throw NonRetryable(str(R.string.err_download_http, code))
+                }
+                val base = if (resume) have else 0L
+                if (!resume) part.delete()
+                val remaining = conn.contentLengthLong
+                val total = when {
+                    remaining > 0 && resume -> base + remaining
+                    remaining > 0 -> remaining
+                    else -> apk.size
+                }
+                var done = base
+                var lastShown = base
                 conn.inputStream.use { input ->
-                    part.outputStream().use { out ->
+                    FileOutputStream(part, resume).use { out ->
                         val buf = ByteArray(64 * 1024)
                         while (true) {
                             val n = input.read(buf)
@@ -110,7 +146,6 @@ object Installer {
                         }
                     }
                 }
-                if (!part.renameTo(file)) throw IOException(str(R.string.err_save))
             } finally {
                 conn.disconnect()
             }
