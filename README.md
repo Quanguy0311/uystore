@@ -19,7 +19,9 @@ Questions, app suggestions and release news: [join the Discord](https://discord.
 - Search by name or by what an app does, like "video player" or "launcher"
 - Picks the APK that matches your TV's CPU
 - Checks the signing key before installing an update, and holds the update if the key changed
-- My Apps shows what's installed, with updates for apps in the catalog
+- My Apps shows what's installed, with updates for apps in the catalog and a count of waiting updates on the tab
+- On Android 12 and newer, updates to apps Open Shelf installed skip Android's confirmation screen, so Update all just runs
+- App pages show screenshots from the project's README, the latest release notes, and older releases you can install
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 - When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
