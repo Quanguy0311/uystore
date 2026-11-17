@@ -124,6 +124,9 @@
     <string name="search_matches">一致：</string>
 
     <string name="mine_title">マイアプリ</string>
+    <string name="sort_default">並び替え：標準</string>
+    <string name="sort_name">並び替え：名前 A–Z</string>
+    <string name="sort_date">並び替え：リリース日が新しい順</string>
     <plurals name="updates_ready">
         <item quantity="other">%1$d件の更新の準備完了</item>
     </plurals>

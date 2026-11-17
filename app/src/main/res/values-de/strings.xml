@@ -126,6 +126,9 @@
     <string name="search_matches">Übereinstimmungen:</string>
 
     <string name="mine_title">Meine Apps</string>
+    <string name="sort_default">Sortierung: Standard</string>
+    <string name="sort_name">Sortierung: Name A–Z</string>
+    <string name="sort_date">Sortierung: Neuestes Release</string>
     <plurals name="updates_ready">
         <item quantity="one">%1$d Update bereit</item>
         <item quantity="other">%1$d Updates bereit</item>
