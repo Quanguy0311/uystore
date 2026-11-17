@@ -4,6 +4,8 @@ An app store for Android TV that lists open-source TV apps from GitHub and insta
 
 Google Play on TV only carries apps that publish there. Plenty of good TV apps only live on GitHub, where installing one means a phone, a download link and a guess at which APK fits your box. Open Shelf does that part for you.
 
+To install it, open the [Downloader](https://www.aftvnews.com/downloader/) app on your TV and enter the code `3399820`.
+
 ![Open Shelf on Android TV](docs/demo.gif)
 
 [Watch the full-quality video](docs/demo.mp4)
@@ -37,8 +39,8 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 
 You need an Android TV, Google TV, Fire TV or other Android box running Android 9 or newer.
 
-1. Download the latest `OpenShelf-x.y.z.apk` from [Releases](https://github.com/wingedpanther/openshelf/releases).
-2. Sideload it with an app like Downloader, or from a computer with `adb install OpenShelf-x.y.z.apk`.
+1. On your TV, install Downloader from the Play Store, open it and enter the code `3399820`. It always fetches the latest version.
+2. Or download the latest `OpenShelf-x.y.z.apk` from [Releases](https://github.com/wingedpanther/openshelf/releases) and install it from a computer with `adb install OpenShelf-x.y.z.apk`.
 3. The first time you install an app, Android asks you to allow installs from Open Shelf. Allow it once.
 
 After that, new versions of Open Shelf show up in My Apps, so you only sideload it once.
