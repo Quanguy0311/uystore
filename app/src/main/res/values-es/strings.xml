@@ -170,7 +170,7 @@
     <string name="set_catalog">Catálogo</string>
     <string name="catalog_value">%1$s apps · %2$s</string>
     <string name="catalog_help">Todas las apps de Android TV en GitHub que publican un APK y han publicado una versión en los últimos 3 años. Comprobado el %1$s. Esta versión incluye la lista dentro de la app.</string>
-    <string name="set_stars">Ocultar apps con menos estrellas de</string>
+    <string name="set_stars">Ocultar apps con menos estrellas que</string>
     <string name="set_stars_help">Excluye de Descubrir las apps muy nuevas o poco usadas. Hay %1$s apps ocultas. La búsqueda sigue encontrándolas por su nombre exacto.</string>
     <string name="set_streams">Ocultar apps de IPTV y streaming</string>
     <string name="streams_on">Activado · %1$s ocultas</string>
@@ -208,4 +208,3 @@
     <string name="action_cancel">Cancelar</string>
     <string name="whats_new_short">Novedades</string>
 </resources>
-

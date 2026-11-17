@@ -548,4 +548,3 @@ object Prefs {
         file.edit().putInt("accent", accent).apply()
     }
 }
-
