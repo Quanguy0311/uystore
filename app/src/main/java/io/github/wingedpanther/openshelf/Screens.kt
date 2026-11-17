@@ -1099,6 +1099,8 @@ private fun otherApps(ctx: Context, exclude: Set<String>): List<LocalApp> {
         .sortedBy { it.label.lowercase() }
 }
 
+private enum class AppSort { Default, Name, Date }
+
 private fun shelfApps(ctx: Context): List<Pair<App, Installed>> {
     val own = SelfUpdate.app?.takeIf { SelfUpdate.ready(ctx) }?.let { listOf(it to Device.installed(ctx, it.pkg)!!) }.orEmpty()
     return own + Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
@@ -1116,6 +1118,13 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
     val tick = Device.tick
     val self = SelfUpdate.app
     val mine = remember(tick, self) { shelfApps(ctx) }
+    val sortedMine = remember(mine, Prefs.appSort) {
+        when (AppSort.entries[Prefs.appSort]) {
+            AppSort.Default -> mine
+            AppSort.Name -> mine.sortedBy { it.first.name.lowercase() }
+            AppSort.Date -> mine.sortedByDescending { it.first.date }
+        }
+    }
     var others by remember { mutableStateOf<List<LocalApp>?>(null) }
     LaunchedEffect(tick) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
     fun state(a: App, i: Installed): State = when {
@@ -1139,7 +1148,14 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                 }
                 T(parts.joinToString(" · "), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             }
+            val sortText = when (AppSort.entries[Prefs.appSort]) {
+                AppSort.Default -> str(R.string.sort_default)
+                AppSort.Name -> str(R.string.sort_name)
+                AppSort.Date -> str(R.string.sort_date)
+            }
+            Pill(sortText, { Prefs.nextAppSort() })
             if (updatable.isNotEmpty()) {
+                Spacer(Modifier.width(12.dp))
                 Pill(str(R.string.update_all), { updatable.filter { it.first != self }.ifEmpty { updatable }.forEach { (a, _) -> Installer.start(ctx, a) } }, solid = true, icon = Icons.Download, requester = handoff.target)
             }
         }
@@ -1153,9 +1169,9 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                     }
                 }
             }
-            items(mine, key = { it.first.id }) { (a, i) ->
+            items(sortedMine, key = { it.first.id }) { (a, i) ->
                 val st = state(a, i)
-                val first = updatable.isEmpty() && a == mine.first().first
+                val first = updatable.isEmpty() && a == sortedMine.first().first
                 AppRow(
                     focusRequester = if (first) handoff.target else null,
                     onClick = { if (st == State.Update) Installer.start(ctx, a) else openApp(a.id) },

@@ -124,6 +124,9 @@
     <string name="search_matches">匹配：</string>
 
     <string name="mine_title">我的应用</string>
+    <string name="sort_default">排序：默认</string>
+    <string name="sort_name">排序：名称 A-Z</string>
+    <string name="sort_date">排序：按发布日期最新在前</string>
     <plurals name="updates_ready">
         <item quantity="other">%1$d 个更新已就绪</item>
     </plurals>

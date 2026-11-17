@@ -493,6 +493,9 @@ object Prefs {
     var autoCheckSelf by mutableStateOf(true)
         private set
 
+    var appSort by mutableIntStateOf(0)
+        private set
+
     fun toggleStreams() {
         hideStreams = !hideStreams
         file.edit().putBoolean("hideStreams", hideStreams).apply()
@@ -501,6 +504,11 @@ object Prefs {
     fun toggleAutoCheck() {
         autoCheckSelf = !autoCheckSelf
         file.edit().putBoolean("autoCheckSelf", autoCheckSelf).apply()
+    }
+
+    fun nextAppSort() {
+        appSort = (appSort + 1) % 3
+        file.edit().putInt("appSort", appSort).apply()
     }
 
     val themes = listOf(R.string.theme_match, R.string.theme_light, R.string.theme_dark)
@@ -516,6 +524,7 @@ object Prefs {
         theme = file.getInt("theme", 0).coerceIn(themes.indices)
         hideStreams = file.getBoolean("hideStreams", true)
         autoCheckSelf = file.getBoolean("autoCheckSelf", true)
+        appSort = file.getInt("appSort", 0).coerceIn(0..2)
         language = file.getInt("language", 0).coerceIn(languages.indices)
     }
 
