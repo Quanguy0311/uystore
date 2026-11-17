@@ -202,4 +202,18 @@
     <string name="older_failed">GitHubに接続できませんでした。少し待ってからもう一度お試しください。</string>
     <string name="action_cancel">キャンセル</string>
     <string name="whats_new_short">新機能</string>
+    <string name="link_action">リンク</string>
+    <string name="link_cancel">キャンセル</string>
+    <string name="link_confirm">検証してリンク</string>
+    <string name="link_err_abi">このテレビのアーキテクチャに合うAPKがありません。</string>
+    <string name="link_err_cert">APKの署名証明書がインストール済みのアプリと一致しません。</string>
+    <string name="link_err_duplicate">このリポジトリはすでにリンクされています。</string>
+    <string name="link_err_no_apk">このリリースにAPKファイルがありません。</string>
+    <string name="link_err_package">APKのパッケージ名がインストール済みのアプリと一致しません。</string>
+    <string name="link_err_release">このリポジトリのリリースが見つかりません。</string>
+    <string name="link_err_url">有効なGitHubリポジトリのアドレスではありません。</string>
+    <string name="link_hint">github.com/owner/repo</string>
+    <string name="link_title">GitHubリポジトリをリンク</string>
+    <string name="link_unlink">リンク解除</string>
+    <string name="link_working">検証中…</string>
 </resources>

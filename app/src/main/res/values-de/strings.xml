@@ -207,4 +207,18 @@
     <string name="older_failed">GitHub ist nicht erreichbar. Versuch es in einer Minute noch einmal.</string>
     <string name="action_cancel">Abbrechen</string>
     <string name="whats_new_short">Was ist neu</string>
+    <string name="link_action">Verknüpfen</string>
+    <string name="link_cancel">Abbrechen</string>
+    <string name="link_confirm">Prüfen und verknüpfen</string>
+    <string name="link_err_abi">Keine APK passt zur Architektur dieses Fernsehers.</string>
+    <string name="link_err_cert">Das Signaturzertifikat der APK stimmt nicht mit der installierten App überein.</string>
+    <string name="link_err_duplicate">Dieses Repository ist bereits verknüpft.</string>
+    <string name="link_err_no_apk">Dieses Release enthält keine APK-Dateien.</string>
+    <string name="link_err_package">Der Paketname der APK stimmt nicht mit der installierten App überein.</string>
+    <string name="link_err_release">Für dieses Repository wurde kein Release gefunden.</string>
+    <string name="link_err_url">Das ist keine gültige GitHub-Repository-Adresse.</string>
+    <string name="link_hint">github.com/owner/repo</string>
+    <string name="link_title">GitHub-Repository verknüpfen</string>
+    <string name="link_unlink">Verknüpfung aufheben</string>
+    <string name="link_working">Wird geprüft…</string>
 </resources>
