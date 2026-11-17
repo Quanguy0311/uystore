@@ -194,4 +194,14 @@
     <string name="discord_title">Tritt dem Open-Shelf-Discord bei</string>
     <string name="discord_body">Scanne den Code mit der Kamera deines Handys oder gib den Link unten ein.</string>
     <string name="action_close">Schließen</string>
+    <string name="whats_new">Neu in %1$s</string>
+    <string name="older_title">%1$s installieren?</string>
+    <string name="older_checking">Diese Version wird auf GitHub gesucht …</string>
+    <string name="older_install_body">Open Shelf lädt %1$s aus den GitHub-Releases des Projekts und installiert es. Wie bei jedem Update wird zuerst der Signaturschlüssel geprüft.</string>
+    <string name="older_uninstall_body">%1$s %2$s ist installiert. Um zu %3$s zurückzugehen, deinstalliere es zuerst. Dabei werden seine Daten und Einstellungen gelöscht. Wähle danach erneut %3$s.</string>
+    <string name="older_uninstall">Zuerst deinstallieren</string>
+    <string name="older_no_apk">Diese Version enthält keine APK, die Open Shelf installieren kann.</string>
+    <string name="older_failed">GitHub ist nicht erreichbar. Versuch es in einer Minute noch einmal.</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="whats_new_short">Was ist neu</string>
 </resources>

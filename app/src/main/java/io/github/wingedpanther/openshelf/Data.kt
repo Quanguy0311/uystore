@@ -158,7 +158,7 @@ object SelfUpdate {
         val fresh = now - prefs.getLong("at", 0) < EVERY
         val cached = prefs.getString("release", null)?.takeIf { fresh }?.let { it to prefs.getString("repo", null) }
         val (release, repo) = cached ?: withContext(Dispatchers.IO) {
-            runCatching { fetch("https://api.github.com/repos/$REPO/releases/latest") to fetch("https://api.github.com/repos/$REPO") }.getOrNull()
+            runCatching { fetchText("https://api.github.com/repos/$REPO/releases/latest") to fetchText("https://api.github.com/repos/$REPO") }.getOrNull()
         }?.also { (r, p) -> prefs.edit().putLong("at", now).putString("release", r).putString("repo", p).apply() } ?: return
         runCatching { app = parse(ctx, JSONObject(release), repo?.let { JSONObject(it) }) }
     }
@@ -182,7 +182,7 @@ object SelfUpdate {
         )
     }
 
-    private fun newer(a: String, b: String): Boolean {
+    fun newer(a: String, b: String): Boolean {
         val x = a.split('.').map { it.toIntOrNull() ?: 0 }
         val y = b.split('.').map { it.toIntOrNull() ?: 0 }
         for (i in 0 until maxOf(x.size, y.size)) {
@@ -192,18 +192,114 @@ object SelfUpdate {
         return false
     }
 
-    private fun fetch(url: String): String {
-        val conn = URL(url).openConnection() as HttpURLConnection
-        return try {
-            conn.connectTimeout = 15_000
-            conn.readTimeout = 15_000
-            conn.setRequestProperty("Accept", "application/vnd.github+json")
-            conn.setRequestProperty("User-Agent", "OpenShelf (+https://github.com/$REPO)")
-            if (conn.responseCode !in 200..299) error("HTTP ${conn.responseCode}")
-            conn.inputStream.bufferedReader().use { it.readText() }
-        } finally {
-            conn.disconnect()
+}
+
+fun fetchText(url: String): String {
+    val conn = URL(url).openConnection() as HttpURLConnection
+    return try {
+        conn.connectTimeout = 15_000
+        conn.readTimeout = 15_000
+        conn.setRequestProperty("Accept", "application/vnd.github+json")
+        conn.setRequestProperty("User-Agent", "OpenShelf (+https://github.com/wingedpanther/openshelf)")
+        if (conn.responseCode !in 200..299) error("HTTP ${conn.responseCode}")
+        conn.inputStream.bufferedReader().use { it.readText() }
+    } finally {
+        conn.disconnect()
+    }
+}
+
+data class ReleaseInfo(val tag: String, val notes: String, val apks: List<Apk>)
+
+object GitHub {
+    private val releases = HashMap<String, ReleaseInfo>()
+    private val shots = HashMap<String, List<String>>()
+    private val skip = Regex("debug|unsigned|(^|[-_.])root[-_.]|geckoIncluded|test", RegexOption.IGNORE_CASE)
+    private val tvHint = Regex("(^|[-_.])(tv|androidtv|atv|leanback|firetv)([-_.]|$)", RegexOption.IGNORE_CASE)
+    private val phoneHint = Regex("(^|[-_.])(mobile|phone|wear|auto)([-_.]|$)", RegexOption.IGNORE_CASE)
+    private val notShot = Regex(
+        "shields\\.io|badge|/workflows/|codecov|logo|icon|favicon|banner|sponsor|buymeacoffee|ko-fi|paypal|liberapay|opencollective|" +
+            "google-play|play\\.google|f-droid|fdroid|get-it-on|izzy|obtainium|star-history|contrib\\.rocks|readme-stats|visitor|emoji|\\.svg",
+        RegexOption.IGNORE_CASE,
+    )
+
+    suspend fun release(repo: String, tag: String): ReleaseInfo? {
+        val key = "$repo@$tag"
+        releases[key]?.let { return it }
+        val info = withContext(Dispatchers.IO) {
+            runCatching {
+                val o = JSONObject(fetchText("https://api.github.com/repos/$repo/releases/tags/${java.net.URLEncoder.encode(tag, "UTF-8")}"))
+                val assets = o.getJSONArray("assets")
+                val all = (0 until assets.length()).map { assets.getJSONObject(it) }
+                    .filter { it.getString("name").endsWith(".apk", true) && !skip.containsMatchIn(it.getString("name")) }
+                    .map { Apk(it.getString("name"), abiOf(it.getString("name")), it.getString("browser_download_url"), it.getLong("size")) }
+                val tv = all.filter { tvHint.containsMatchIn(it.name) }
+                val apks = tv.ifEmpty { all.filterNot { phoneHint.containsMatchIn(it.name) }.ifEmpty { all } }
+                ReleaseInfo(tag, plain(o.optString("body")), apks)
+            }.getOrNull()
+        } ?: return null
+        releases[key] = info
+        return info
+    }
+
+    suspend fun screenshots(repo: String): List<String> {
+        shots[repo]?.let { return it }
+        val found = withContext(Dispatchers.IO) {
+            listOf("README.md", "readme.md", "Readme.md").firstNotNullOfOrNull { name ->
+                runCatching { fetchText("https://raw.githubusercontent.com/$repo/HEAD/$name") }.getOrNull()
+            }?.let { imagesIn(repo, it) }
+        } ?: return emptyList()
+        shots[repo] = found
+        return found
+    }
+
+    private fun imagesIn(repo: String, md: String): List<String> {
+        val markdown = Regex("!\\[[^\\]]*]\\(\\s*<?([^)\\s>]+)").findAll(md).map { it.range.first to it.groupValues[1] }
+        val html = Regex("<img[^>]+src=[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE).findAll(md).map { it.range.first to it.groupValues[1] }
+        return (markdown + html).sortedBy { it.first }.map { resolve(repo, it.second) }
+            .filter { url ->
+                !notShot.containsMatchIn(url) && (Regex("\\.(png|jpe?g|webp|gif)($|\\?)", RegexOption.IGNORE_CASE).containsMatchIn(url) ||
+                    "user-attachments/assets" in url || "user-images.githubusercontent.com" in url)
+            }
+            .distinct().take(8).toList()
+    }
+
+    private fun resolve(repo: String, src: String): String {
+        val blob = Regex("^https?://github\\.com/([^/]+/[^/]+)/(?:blob|raw)/(.+?)(\\?.*)?$").find(src)
+        return when {
+            blob != null -> "https://raw.githubusercontent.com/${blob.groupValues[1]}/${blob.groupValues[2]}"
+            src.startsWith("http") -> src
+            src.startsWith("//") -> "https:$src"
+            else -> "https://raw.githubusercontent.com/$repo/HEAD/${src.removePrefix("./").removePrefix("/")}"
         }
+    }
+
+    private fun abiOf(name: String): String {
+        val n = name.lowercase()
+        listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86").firstOrNull { it in n }?.let { return it }
+        return when {
+            "arm64" in n || "aarch64" in n -> "arm64-v8a"
+            "armv7" in n || "arm32" in n -> "armeabi-v7a"
+            "universal" in n -> "universal"
+            else -> "any"
+        }
+    }
+
+    private fun plain(md: String): String {
+        val lines = md.replace("\r", "").lineSequence().map { it.trim() }
+            .filterNot { it.startsWith("<!--") || it.startsWith("![") || it.matches(Regex("^([-*_])\\1{2,}$")) || "Full Changelog" in it }
+            .map { line ->
+                line.replace(Regex("^#{1,6}\\s*"), "")
+                    .replace(Regex("^[*+-]\\s+"), "• ")
+                    .replace(Regex("!\\[[^\\]]*]\\([^)]*\\)"), "")
+                    .replace(Regex("\\[([^\\]]*)]\\([^)]*\\)"), "$1")
+                    .replace(Regex("<[^>]+>"), "")
+                    .replace(Regex("(\\*\\*|__|`)"), "")
+                    .replace(Regex("https?://\\S+"), "")
+                    .trim()
+            }
+        val out = mutableListOf<String>()
+        for (l in lines) if (l.isNotEmpty() || (out.isNotEmpty() && out.last().isNotEmpty())) out.add(l)
+        return out.joinToString("\n").trim()
     }
 }
 

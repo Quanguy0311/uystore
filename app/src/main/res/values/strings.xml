@@ -195,4 +195,14 @@
     <string name="discord_body">Scan the code with your phone’s camera, or type the link below.</string>
     <string name="action_close">Close</string>
     <string name="discord_link" translatable="false">discord.gg/DA9tEsHQHf</string>
+    <string name="whats_new">What’s new in %1$s</string>
+    <string name="older_title">Install %1$s?</string>
+    <string name="older_checking">Looking up this release on GitHub…</string>
+    <string name="older_install_body">Open Shelf downloads %1$s from the project’s GitHub releases and installs it. It checks the signing key first, like any update.</string>
+    <string name="older_uninstall_body">%1$s %2$s is installed. To go back to %3$s, uninstall it first, which deletes its data and settings. Then pick %3$s again.</string>
+    <string name="older_uninstall">Uninstall first</string>
+    <string name="older_no_apk">This release has no APK that Open Shelf can install.</string>
+    <string name="older_failed">Couldn’t reach GitHub. Try again in a minute.</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="whats_new_short">What’s new</string>
 </resources>

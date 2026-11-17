@@ -189,4 +189,14 @@
     <string name="discord_title">加入 Open Shelf 的 Discord</string>
     <string name="discord_body">用手機相機掃描 QR 碼，或輸入下方的連結。</string>
     <string name="action_close">關閉</string>
+    <string name="whats_new">%1$s 更新內容</string>
+    <string name="older_title">安裝 %1$s？</string>
+    <string name="older_checking">正在 GitHub 上查詢此版本…</string>
+    <string name="older_install_body">Open Shelf 會從專案的 GitHub 發行頁下載 %1$s 並安裝。和一般更新一樣，會先檢查簽章金鑰。</string>
+    <string name="older_uninstall_body">已安裝 %1$s %2$s。要退回 %3$s，需要先解除安裝，這會刪除它的資料和設定。然後再選一次 %3$s。</string>
+    <string name="older_uninstall">先解除安裝</string>
+    <string name="older_no_apk">此版本沒有 Open Shelf 可以安裝的 APK。</string>
+    <string name="older_failed">無法連線到 GitHub。請稍後再試。</string>
+    <string name="action_cancel">取消</string>
+    <string name="whats_new_short">更新內容</string>
 </resources>

@@ -189,4 +189,14 @@
     <string name="discord_title">Open ShelfのDiscordに参加</string>
     <string name="discord_body">スマートフォンのカメラでコードを読み取るか、下のリンクを入力してください。</string>
     <string name="action_close">閉じる</string>
+    <string name="whats_new">%1$sの新機能</string>
+    <string name="older_title">%1$sをインストールしますか？</string>
+    <string name="older_checking">GitHubでこのリリースを確認しています…</string>
+    <string name="older_install_body">Open ShelfはプロジェクトのGitHubリリースから%1$sをダウンロードしてインストールします。通常のアップデートと同じく、先に署名キーを確認します。</string>
+    <string name="older_uninstall_body">%1$s %2$sがインストールされています。%3$sに戻すには、先にアンインストールしてください。アプリのデータと設定は削除されます。その後、もう一度%3$sを選んでください。</string>
+    <string name="older_uninstall">先にアンインストール</string>
+    <string name="older_no_apk">このリリースにはOpen ShelfがインストールできるAPKがありません。</string>
+    <string name="older_failed">GitHubに接続できませんでした。少し待ってからもう一度お試しください。</string>
+    <string name="action_cancel">キャンセル</string>
+    <string name="whats_new_short">新機能</string>
 </resources>

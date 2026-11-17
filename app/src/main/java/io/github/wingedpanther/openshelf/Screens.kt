@@ -114,6 +114,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.window.Dialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.widthIn
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import androidx.compose.ui.window.DialogProperties
 
 enum class Tab(val label: Int) { Discover(R.string.tab_discover), Categories(R.string.tab_categories), Search(R.string.tab_search), Mine(R.string.tab_mine), Settings(R.string.tab_settings) }
 
@@ -153,6 +159,7 @@ fun OpenShelf() {
         return
     }
 
+    val updates = remember(Device.tick, SelfUpdate.app) { updateCount(ctx) }
     val openApp: (String) -> Unit = { page = it; handoff.pending = true }
     val openRoom: (String) -> Unit = { room = it; lastRoom = it; lastInRoom = null; handoff.pending = true }
     val closePage = {
@@ -192,6 +199,7 @@ fun OpenShelf() {
             requesters = tabRequesters,
             onTab = { if (page == null) tab = it },
             onTabsFocus = { tabsFocused = it },
+            updates = updates,
         )
     }
 
@@ -252,6 +260,7 @@ private fun TopBar(
     requesters: Map<Tab, FocusRequester>,
     onTab: (Tab) -> Unit,
     onTabsFocus: (Boolean) -> Unit,
+    updates: Int,
 ) {
     Box(Modifier.fillMaxWidth().height(64.dp)) {
         if (deep) {
@@ -296,15 +305,21 @@ private fun TopBar(
                     onFocus = { onTab(t) },
                 ) { f ->
                     val selected = t == tab
-                    Box(
+                    Row(
                         Modifier
                             .lift(f, 1.06f, CircleShape, rest = 0.dp)
                             .background(if (f) C.accent else if (selected) C.Selected else Color.Transparent, CircleShape)
                             .height(28.dp)
                             .padding(horizontal = 15.dp),
-                        contentAlignment = Alignment.Center,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         T(str(t.label), 13.5.sp, color = if (f) C.OnAccent else if (selected) C.Ink else C.Stone, weight = FontWeight.Medium)
+                        if (t == Tab.Mine && updates > 0) {
+                            Spacer(Modifier.width(6.dp))
+                            Box(Modifier.height(17.dp).widthIn(min = 17.dp).background(if (f) C.OnAccent else C.accent, CircleShape).padding(horizontal = 4.dp), contentAlignment = Alignment.Center) {
+                                T(if (updates > 9) "9+" else "$updates", 10.5.sp, color = if (f) C.accent else C.OnAccent, weight = FontWeight.SemiBold)
+                            }
+                        }
                     }
                 }
             }
@@ -683,11 +698,24 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
     val tick = Device.tick
     val installed = remember(app.id, tick) { Device.installedAs(ctx, app) }
     val other = remember(app.id, tick) { Device.installed(ctx, app.pkg)?.let { Catalog.sibling(app, it) } }
-    val gallery = remember(app.id) { app.art.gallery }
-    var shot by remember(app.id) { mutableStateOf(gallery.firstOrNull()) }
+    var readme by remember(app.id) { mutableStateOf(emptyList<String>()) }
+    var notes by remember(app.id) { mutableStateOf<String?>(null) }
+    LaunchedEffect(app.id) {
+        notes = GitHub.release(app.repo, app.version)?.notes?.takeIf { it.isNotBlank() }
+    }
+    LaunchedEffect(app.id) {
+        readme = coroutineScope {
+            GitHub.screenshots(app.repo).map { url -> async { url.takeIf { Images.load(url, 480)?.let { it.width >= 480 && it.height >= 270 } == true } } }
+                .awaitAll().filterNotNull()
+        }
+    }
+    val gallery = remember(app.id, readme) { (app.art.gallery + readme).distinct() }
+    var shot by remember(app.id) { mutableStateOf(app.art.gallery.firstOrNull()) }
     val apk = pickApk(app)
     val browser = remember { hasBrowser(ctx) }
     val releases = remember(app.id) { app.releases.sortedByDescending { it.tag == app.version } }
+    var older by remember(app.id) { mutableStateOf<Release?>(null) }
+    var showNotes by remember(app.id) { mutableStateOf(false) }
     Row(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
         Column(Modifier.width(476.dp)) {
             AnimatedContent(shot, transitionSpec = { fadeIn(tween(260)) togetherWith fadeOut(tween(160)) }, label = "shot") { s ->
@@ -696,8 +724,12 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 }
             }
             if (gallery.size > 1) {
-                Row(Modifier.padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    gallery.forEach { s ->
+                LazyRow(
+                    Modifier.padding(top = 14.dp).requiredWidth(500.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                ) {
+                    items(gallery, key = { it }) { s ->
                         Focusable({ shot = s }, onFocus = { shot = s }) { f ->
                             Box(Modifier.size(108.dp, 61.dp).lift(f, ring = 8.dp, shape = RoundedCornerShape(8.dp)).clip(RoundedCornerShape(8.dp))) {
                                 ArtImage(s, app, 240, fill = true)
@@ -707,16 +739,19 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 }
             }
             if (releases.isNotEmpty()) {
-                T(str(R.string.releases), 12.5.sp, Modifier.padding(top = if (gallery.size > 1) 24.dp else 28.dp), color = C.Stone, weight = FontWeight.Medium)
+                T(str(R.string.releases), 12.5.sp, Modifier.padding(top = if (gallery.size > 1) 16.dp else 28.dp), color = C.Stone, weight = FontWeight.Medium)
                 Row(Modifier.padding(top = 9.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     releases.take(4).forEachIndexed { i, r ->
-                        Column(
-                            Modifier.weight(1f).background(C.Mat, RoundedCornerShape(8.dp))
-                                .border(if (i == 0) 1.5.dp else 1.dp, if (i == 0) C.accent else C.Hair, RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                        ) {
-                            T(r.tag, 12.5.sp, weight = FontWeight.SemiBold, maxLines = 1)
-                            T(if (i == 0) str(R.string.latest_month, Fmt.monthYear(r.date)) else Fmt.monthYear(r.date), 10.5.sp, color = C.Stone, maxLines = 1)
+                        Focusable({ older = r }, Modifier.weight(1f).focusProperties { canFocus = i > 0 }) { f ->
+                            Column(
+                                Modifier.fillMaxWidth().lift(f, 1.04f, RoundedCornerShape(8.dp), rest = 0.dp, ring = 8.dp)
+                                    .background(C.Mat, RoundedCornerShape(8.dp))
+                                    .border(if (i == 0) 1.5.dp else 1.dp, if (i == 0) C.accent else C.Hair, RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            ) {
+                                T(r.tag, 12.5.sp, weight = FontWeight.SemiBold, maxLines = 1)
+                                T(if (i == 0) str(R.string.latest_month, Fmt.monthYear(r.date)) else Fmt.monthYear(r.date), 10.5.sp, color = C.Stone, maxLines = 1)
+                            }
                         }
                     }
                 }
@@ -773,7 +808,76 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
                 Prov(Icons.Chip, picked, apk.name)
             }
-            if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, Modifier.padding(top = 14.dp).offset(x = (-4).dp), icon = Icons.Link)
+            Row(Modifier.padding(top = 14.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, icon = Icons.Link)
+                if (notes != null) Pill(str(R.string.whats_new_short), { showNotes = true })
+            }
+        }
+    }
+    older?.let { r -> OlderDialog(app, r, installed) { older = null } }
+    notes?.takeIf { showNotes }?.let { NotesDialog(str(R.string.whats_new, app.version), it) { showNotes = false } }
+}
+
+@Composable
+private fun NotesDialog(title: String, notes: String, onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.width(620.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(title, 22.sp, weight = FontWeight.SemiBold, tight = true)
+            T(notes, 14.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 14)
+            Row(Modifier.padding(top = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
+}
+
+@Composable
+private fun OlderDialog(app: App, release: Release, installed: Installed?, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val goRequester = remember { FocusRequester() }
+    var info by remember { mutableStateOf<ReleaseInfo?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    LaunchedEffect(release.tag) {
+        info = GitHub.release(app.repo, release.tag)
+        failed = info == null
+    }
+    val name = release.tag.removePrefix("v")
+    val backwards = installed != null && (installed.versionName == null || !SelfUpdate.newer(name, installed.versionName.removePrefix("v")))
+    val target = info?.takeIf { it.apks.isNotEmpty() }?.let { app.copy(version = release.tag, versionName = name, date = release.date, apks = it.apks) }
+    Dialog(onDismissRequest = onClose) {
+        Column(
+            Modifier.width(460.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.older_title, release.tag), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            val body = when {
+                backwards -> str(R.string.older_uninstall_body, app.name, installed?.versionName ?: "?", release.tag)
+                failed -> str(R.string.older_failed)
+                info == null -> str(R.string.older_checking)
+                target == null -> str(R.string.older_no_apk)
+                else -> str(R.string.older_install_body, release.tag)
+            }
+            T(body, 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+            Row(
+                Modifier.padding(top = 22.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Pill(str(R.string.action_cancel), onClose, requester = if (backwards || target == null) goRequester else null)
+                if (backwards) {
+                    Spacer(Modifier.width(10.dp))
+                    Pill(str(R.string.older_uninstall), { uninstall(ctx, app.pkg); onClose() }, icon = Icons.Trash)
+                } else if (target != null) {
+                    Spacer(Modifier.width(10.dp))
+                    Pill(str(R.string.action_install_size, Fmt.mb(pickApk(target).size)), { Installer.start(ctx, target); onClose() },
+                        solid = true, icon = Icons.Download, requester = goRequester)
+                }
+            }
+            LaunchedEffect(target != null) { runCatching { goRequester.requestFocus() } }
         }
     }
 }
@@ -995,17 +1099,23 @@ private fun otherApps(ctx: Context, exclude: Set<String>): List<LocalApp> {
         .sortedBy { it.label.lowercase() }
 }
 
+private fun shelfApps(ctx: Context): List<Pair<App, Installed>> {
+    val own = SelfUpdate.app?.takeIf { SelfUpdate.ready(ctx) }?.let { listOf(it to Device.installed(ctx, it.pkg)!!) }.orEmpty()
+    return own + Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
+        Device.installed(ctx, pkg)?.let { i -> (list.firstOrNull { it.certSha256 != null && it.certSha256 in i.certs } ?: list.firstOrNull { it.forkOf == null } ?: list.first()) to i }
+    }
+}
+
+private fun updateCount(ctx: Context): Int = shelfApps(ctx).count { (a, i) ->
+    i.versionCode < a.versionCode && (a.certSha256 == null || i.certs.isEmpty() || a.certSha256 in i.certs)
+}
+
 @Composable
 private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
     val self = SelfUpdate.app
-    val mine = remember(tick, self) {
-        val own = self?.takeIf { SelfUpdate.ready(ctx) }?.let { listOf(it to Device.installed(ctx, it.pkg)!!) }.orEmpty()
-        own + Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
-            Device.installed(ctx, pkg)?.let { i -> (list.firstOrNull { it.certSha256 != null && it.certSha256 in i.certs } ?: list.firstOrNull { it.forkOf == null } ?: list.first()) to i }
-        }
-    }
+    val mine = remember(tick, self) { shelfApps(ctx) }
     var others by remember { mutableStateOf<List<LocalApp>?>(null) }
     LaunchedEffect(tick) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
     fun state(a: App, i: Installed): State = when {
