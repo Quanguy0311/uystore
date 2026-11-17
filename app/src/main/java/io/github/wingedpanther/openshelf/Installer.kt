@@ -135,6 +135,7 @@ object Installer {
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(app.pkg)
             setSize(file.length())
+            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         }
         val sessionId = pi.createSession(params)
         pi.openSession(sessionId).use { session ->
