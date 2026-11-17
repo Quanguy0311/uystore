@@ -466,6 +466,11 @@ object Device {
         return all.map { sha256(it.toByteArray()) }.toSet()
     }
 
+    fun permissions(ctx: Context, pkg: String): List<String> = runCatching {
+        val pi = ctx.packageManager.getPackageInfo(pkg, PackageManager.GET_PERMISSIONS)
+        pi.requestedPermissions?.toList().orEmpty()
+    }.getOrElse { emptyList() }
+
     private fun sha256(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b).joinToString("") { "%02x".format(it) }
 
     fun freeBytes(ctx: Context): Long = StatFs(ctx.filesDir.path).availableBytes

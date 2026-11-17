@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -325,7 +326,10 @@ fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true
 fun JobNote(app: App, modifier: Modifier = Modifier) {
     when (val job = Installer.jobs[app.id]) {
         is Job.Failed -> T(job.message, 12.5.sp, modifier, color = C.Ink2, maxLines = 4)
-        is Job.Held -> Row(modifier, verticalAlignment = Alignment.Top) {
+        is Job.Held -> Row(
+            modifier.clip(RoundedCornerShape(10.dp)).background(C.WallDeep).padding(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
             Ico(Icons.ShieldAlert, 16.dp, C.Ink)
             Spacer(Modifier.width(7.dp))
             T(job.message, 12.5.sp, color = C.Ink, weight = FontWeight.Medium, maxLines = 3)
