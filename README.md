@@ -6,6 +6,8 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 
 To install it, open the [Downloader](https://www.aftvnews.com/downloader/) app on your TV and enter the code `3399820`.
 
+Questions, app suggestions and release news: [join the Discord](https://discord.gg/DA9tEsHQHf). Bugs go to [GitHub issues](https://github.com/wingedpanther/openshelf/issues).
+
 ![Open Shelf on Android TV](docs/demo.gif)
 
 [Watch the full-quality video](docs/demo.mp4)
