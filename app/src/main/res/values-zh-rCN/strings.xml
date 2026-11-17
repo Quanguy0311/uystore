@@ -183,4 +183,10 @@
     <string name="self_update_later">稍后</string>
     <string name="set_self_update">检查 Open Shelf 更新</string>
     <string name="set_self_update_help">打开应用时在 GitHub 上检查 Open Shelf 的新版本。下载前会先询问你。</string>
+    <string name="set_discord">Discord</string>
+    <string name="discord_value">加入</string>
+    <string name="discord_help">提问、推荐应用和版本消息都在这里。问题反馈仍请提交到 GitHub Issues。</string>
+    <string name="discord_title">加入 Open Shelf 的 Discord</string>
+    <string name="discord_body">用手机相机扫描二维码，或输入下面的链接。</string>
+    <string name="action_close">关闭</string>
 </resources>

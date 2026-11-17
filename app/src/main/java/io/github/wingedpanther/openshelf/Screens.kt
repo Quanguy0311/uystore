@@ -1141,6 +1141,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
     val canInstall = remember(tick) { Installer.canInstall(ctx) }
     val cache = remember(cacheTick, tick) { Device.cacheBytes(ctx) }
     val version = remember { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }
+    var showDiscord by remember { mutableStateOf(false) }
     val rows = listOf(
         Setting(str(R.string.set_accent), str(Prefs.accents[Prefs.accent].first),
             str(R.string.set_accent_help)) { Prefs.nextAccent() },
@@ -1168,6 +1169,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_cache_help)) {
             Device.clearCache(ctx); cacheTick++
         },
+        Setting(str(R.string.set_discord), str(R.string.discord_value),
+            str(R.string.discord_help)) { showDiscord = true },
         Setting(str(R.string.set_about), str(R.string.about_value, version ?: ""),
             str(R.string.about_help)),
     )
@@ -1204,6 +1207,28 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                 }
                 if (i == 6 || i == 9) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             }
+        }
+    }
+    if (showDiscord) DiscordDialog { showDiscord = false }
+}
+
+@Composable
+private fun DiscordDialog(onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onClose) {
+        Column(
+            Modifier.width(440.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.discord_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            T(str(R.string.discord_body), 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+            Image(painterResource(R.drawable.discord_qr), null,
+                Modifier.padding(top = 20.dp).size(220.dp).clip(RoundedCornerShape(12.dp)).align(Alignment.CenterHorizontally))
+            T(str(R.string.discord_link), 18.sp, Modifier.padding(top = 14.dp).align(Alignment.CenterHorizontally), weight = FontWeight.SemiBold)
+            Row(Modifier.padding(top = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
         }
     }
 }

@@ -183,4 +183,10 @@
     <string name="self_update_later">後で</string>
     <string name="set_self_update">Open Shelfのアップデートを確認</string>
     <string name="set_self_update_help">アプリを開いたときに、GitHubでOpen Shelfの新しいリリースを確認します。ダウンロードの前に確認画面が表示されます。</string>
+    <string name="set_discord">Discord</string>
+    <string name="discord_value">参加</string>
+    <string name="discord_help">質問、アプリの提案、リリース情報はこちら。不具合は引き続きGitHubのIssueで報告してください。</string>
+    <string name="discord_title">Open ShelfのDiscordに参加</string>
+    <string name="discord_body">スマートフォンのカメラでコードを読み取るか、下のリンクを入力してください。</string>
+    <string name="action_close">閉じる</string>
 </resources>

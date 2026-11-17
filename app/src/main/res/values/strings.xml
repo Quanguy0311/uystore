@@ -188,4 +188,11 @@
     <string name="set_self_update_help">Checks GitHub for a new Open Shelf release when the app opens. A prompt asks before anything is downloaded.</string>
     <string name="on">On</string>
     <string name="off">Off</string>
+    <string name="set_discord">Discord</string>
+    <string name="discord_value">Join</string>
+    <string name="discord_help">Questions, app suggestions and release news. Bugs still go to GitHub issues.</string>
+    <string name="discord_title">Join the Open Shelf Discord</string>
+    <string name="discord_body">Scan the code with your phone’s camera, or type the link below.</string>
+    <string name="action_close">Close</string>
+    <string name="discord_link" translatable="false">discord.gg/DA9tEsHQHf</string>
 </resources>

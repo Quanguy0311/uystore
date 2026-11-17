@@ -188,4 +188,10 @@
     <string name="set_self_update_help">Prüft beim Öffnen der App auf GitHub nach einer neuen Open-Shelf-Version. Vor dem Download wirst du gefragt.</string>
     <string name="on">An</string>
     <string name="off">Aus</string>
+    <string name="set_discord">Discord</string>
+    <string name="discord_value">Beitreten</string>
+    <string name="discord_help">Fragen, App-Vorschläge und Neuigkeiten zu Versionen. Fehler meldest du weiterhin in den GitHub-Issues.</string>
+    <string name="discord_title">Tritt dem Open-Shelf-Discord bei</string>
+    <string name="discord_body">Scanne den Code mit der Kamera deines Handys oder gib den Link unten ein.</string>
+    <string name="action_close">Schließen</string>
 </resources>
