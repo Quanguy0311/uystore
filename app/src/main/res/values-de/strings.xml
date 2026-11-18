@@ -101,6 +101,24 @@
     <string name="prov_released">Veröffentlicht</string>
     <string name="prov_download">Herunterladen</string>
     <string name="prov_signing">Signaturschlüssel</string>
+    <string name="permissions_title">Angeforderte Berechtigungen</string>
+    <string name="permissions_action">Berechtigungen</string>
+    <plurals name="permissions_more">
+        <item quantity="one">%1$d weitere Berechtigung</item>
+        <item quantity="other">%1$d weitere Berechtigungen</item>
+    </plurals>
+    <string name="perm_internet">Vollständiger Netzwerkzugriff</string>
+    <string name="perm_network_state">Netzwerkverbindungen anzeigen</string>
+    <string name="perm_wifi_state">Wi-Fi-Verbindungen anzeigen</string>
+    <string name="perm_wake_lock">Ruhezustand des Geräts verhindern</string>
+    <string name="perm_foreground_service">Vordergrunddienst ausführen</string>
+    <string name="perm_boot">Beim Booten starten</string>
+    <string name="perm_install_packages">Paketinstallationen anfordern</string>
+    <string name="perm_storage_read">Gemeinsamen Speicher lesen</string>
+    <string name="perm_storage_write">Gemeinsamen Speicher ändern</string>
+    <string name="perm_record_audio">Mikrofon</string>
+    <string name="perm_overlay">Über anderen Apps anzeigen</string>
+    <string name="perm_query_packages">Alle installierten Apps sehen</string>
     <string name="sig_unrecorded">Noch nicht erfasst. Android sucht weiterhin Updates anhand der installierten Kopie.</string>
     <string name="sig_checked">Vor der Installation auf Entwicklersignatur überprüft</string>
     <string name="sig_mismatch">Andere Entwicklersignatur. Aktualisierungen angehalten.</string>

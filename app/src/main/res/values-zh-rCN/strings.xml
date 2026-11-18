@@ -100,6 +100,23 @@
     <string name="prov_released">发布时间</string>
     <string name="prov_download">下载</string>
     <string name="prov_signing">签名密钥</string>
+    <string name="permissions_title">申请的权限</string>
+    <string name="permissions_action">权限</string>
+    <plurals name="permissions_more">
+        <item quantity="other">另有 %1$d 项权限</item>
+    </plurals>
+    <string name="perm_internet">完全的网络访问权限</string>
+    <string name="perm_network_state">查看网络连接</string>
+    <string name="perm_wifi_state">查看 Wi-Fi 连接</string>
+    <string name="perm_wake_lock">阻止设备休眠</string>
+    <string name="perm_foreground_service">运行前台服务</string>
+    <string name="perm_boot">开机自启动</string>
+    <string name="perm_install_packages">请求安装应用</string>
+    <string name="perm_storage_read">读取共享存储</string>
+    <string name="perm_storage_write">修改共享存储</string>
+    <string name="perm_record_audio">麦克风</string>
+    <string name="perm_overlay">显示在其他应用上层</string>
+    <string name="perm_query_packages">查看所有已安装应用</string>
     <string name="sig_unrecorded">尚未记录。Android 仍会根据你已安装的副本来检查更新。</string>
     <string name="sig_checked">安装前已对照开发者密钥进行检查</string>
     <string name="sig_mismatch">与开发者密钥不同，更新已暂停。</string>

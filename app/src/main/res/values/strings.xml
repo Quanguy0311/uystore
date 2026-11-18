@@ -101,6 +101,24 @@
     <string name="prov_released">Released</string>
     <string name="prov_download">Download</string>
     <string name="prov_signing">Signing key</string>
+    <string name="permissions_title">Permissions requested</string>
+    <string name="permissions_action">Permissions</string>
+    <plurals name="permissions_more">
+        <item quantity="one">%1$d more permission</item>
+        <item quantity="other">%1$d more permissions</item>
+    </plurals>
+    <string name="perm_internet">Full network access</string>
+    <string name="perm_network_state">View network connections</string>
+    <string name="perm_wifi_state">View Wi-Fi connections</string>
+    <string name="perm_wake_lock">Prevent device from sleeping</string>
+    <string name="perm_foreground_service">Run foreground service</string>
+    <string name="perm_boot">Start on boot</string>
+    <string name="perm_install_packages">Request package installs</string>
+    <string name="perm_storage_read">Read shared storage</string>
+    <string name="perm_storage_write">Modify shared storage</string>
+    <string name="perm_record_audio">Microphone</string>
+    <string name="perm_overlay">Display over other apps</string>
+    <string name="perm_query_packages">See all installed apps</string>
     <string name="sig_unrecorded">Not recorded yet. Android still checks updates against your installed copy.</string>
     <string name="sig_checked">Checked against the developer’s key before install</string>
     <string name="sig_mismatch">Different from the developer’s key. Updates are held.</string>

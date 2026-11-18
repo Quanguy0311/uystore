@@ -50,7 +50,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -716,6 +718,11 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
     val releases = remember(app.id) { app.releases.sortedByDescending { it.tag == app.version } }
     var older by remember(app.id) { mutableStateOf<Release?>(null) }
     var showNotes by remember(app.id) { mutableStateOf(false) }
+    var showPermissions by remember(app.id) { mutableStateOf(false) }
+    val permissions = remember(app.id, installed) {
+        if (installed != null) Device.permissions(ctx, app.pkg) else emptyList()
+    }
+    val knownPermissions = remember(permissions) { permissions.mapNotNull(::permissionLabel) }
     Row(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
         Column(Modifier.width(476.dp)) {
             AnimatedContent(shot, transitionSpec = { fadeIn(tween(260)) togetherWith fadeOut(tween(160)) }, label = "shot") { s ->
@@ -808,14 +815,19 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
                 Prov(Icons.Chip, picked, apk.name)
             }
-            Row(Modifier.padding(top = 14.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            FlowRow(
+                Modifier.padding(top = 14.dp).offset(x = (-4).dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, icon = Icons.Link)
                 if (notes != null) Pill(str(R.string.whats_new_short), { showNotes = true })
+                if (permissions.isNotEmpty()) Pill(str(R.string.permissions_action), { showPermissions = true })
             }
         }
     }
     older?.let { r -> OlderDialog(app, r, installed) { older = null } }
     notes?.takeIf { showNotes }?.let { NotesDialog(str(R.string.whats_new, app.version), it) { showNotes = false } }
+    if (showPermissions) PermissionsDialog(knownPermissions, permissions.size - knownPermissions.size) { showPermissions = false }
 }
 
 @Composable
@@ -828,6 +840,38 @@ private fun NotesDialog(title: String, notes: String, onClose: () -> Unit) {
         ) {
             T(title, 22.sp, weight = FontWeight.SemiBold, tight = true)
             T(notes, 14.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 14)
+            Row(Modifier.padding(top = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
+}
+
+@Composable
+private fun PermissionsDialog(known: List<String>, others: Int, onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.width(520.dp).heightIn(max = 560.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.permissions_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            Column(
+                Modifier.padding(top = 12.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                known.forEach { p ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(5.dp).background(C.Stone, CircleShape))
+                        Spacer(Modifier.width(11.dp))
+                        T(p, 14.sp, color = C.Ink2)
+                    }
+                }
+                if (others > 0) {
+                    T(plural(R.plurals.permissions_more, others, others), 14.sp, Modifier.padding(top = 3.dp), color = C.Stone)
+                }
+            }
             Row(Modifier.padding(top = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
             }
@@ -1462,4 +1506,24 @@ private fun DiscordDialog(onClose: () -> Unit) {
             LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
         }
     }
+}
+
+private fun permissionLabel(permission: String): String? {
+    val short = permission.removePrefix("android.permission.").removePrefix("android.")
+    val mapped = when (short) {
+        "INTERNET" -> R.string.perm_internet
+        "ACCESS_NETWORK_STATE" -> R.string.perm_network_state
+        "ACCESS_WIFI_STATE" -> R.string.perm_wifi_state
+        "WAKE_LOCK" -> R.string.perm_wake_lock
+        "FOREGROUND_SERVICE" -> R.string.perm_foreground_service
+        "RECEIVE_BOOT_COMPLETED" -> R.string.perm_boot
+        "REQUEST_INSTALL_PACKAGES" -> R.string.perm_install_packages
+        "READ_EXTERNAL_STORAGE" -> R.string.perm_storage_read
+        "WRITE_EXTERNAL_STORAGE" -> R.string.perm_storage_write
+        "RECORD_AUDIO" -> R.string.perm_record_audio
+        "SYSTEM_ALERT_WINDOW" -> R.string.perm_overlay
+        "QUERY_ALL_PACKAGES" -> R.string.perm_query_packages
+        else -> null
+    }
+    return mapped?.let(::str)
 }
