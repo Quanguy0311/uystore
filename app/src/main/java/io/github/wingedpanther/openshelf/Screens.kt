@@ -815,12 +815,13 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 val picked = if (apk.abi in listOf("any", "universal")) str(R.string.file_picked_any) else str(R.string.file_picked_abi, abiLabel(apk.abi))
                 Prov(Icons.Chip, picked, apk.name)
             }
-            if (permissions.isNotEmpty()) {
-                Row(Modifier.padding(top = 14.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, icon = Icons.Link)
-                    if (notes != null) Pill(str(R.string.whats_new_short), { showNotes = true })
-                    Pill(str(R.string.permissions_action), { showPermissions = true })
-                }
+            FlowRow(
+                Modifier.padding(top = 14.dp).offset(x = (-4).dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, icon = Icons.Link)
+                if (notes != null) Pill(str(R.string.whats_new_short), { showNotes = true })
+                if (permissions.isNotEmpty()) Pill(str(R.string.permissions_action), { showPermissions = true })
             }
         }
     }
@@ -868,7 +869,7 @@ private fun PermissionsDialog(known: List<String>, others: Int, onClose: () -> U
                     }
                 }
                 if (others > 0) {
-                    T(str(R.string.permissions_more, others), 14.sp, Modifier.padding(top = 3.dp), color = C.Stone)
+                    T(plural(R.plurals.permissions_more, others, others), 14.sp, Modifier.padding(top = 3.dp), color = C.Stone)
                 }
             }
             Row(Modifier.padding(top = 22.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {

@@ -103,7 +103,10 @@
     <string name="prov_signing">Signaturschlüssel</string>
     <string name="permissions_title">Angeforderte Berechtigungen</string>
     <string name="permissions_action">Berechtigungen</string>
-    <string name="permissions_more">%1$d weitere Berechtigungen</string>
+    <plurals name="permissions_more">
+        <item quantity="one">%1$d weitere Berechtigung</item>
+        <item quantity="other">%1$d weitere Berechtigungen</item>
+    </plurals>
     <string name="perm_internet">Vollständiger Netzwerkzugriff</string>
     <string name="perm_network_state">Netzwerkverbindungen anzeigen</string>
     <string name="perm_wifi_state">Wi-Fi-Verbindungen anzeigen</string>

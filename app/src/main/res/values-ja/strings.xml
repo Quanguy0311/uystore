@@ -102,7 +102,9 @@
     <string name="prov_signing">署名キー</string>
     <string name="permissions_title">要求される権限</string>
     <string name="permissions_action">権限</string>
-    <string name="permissions_more">他に %1$d 件の権限</string>
+    <plurals name="permissions_more">
+        <item quantity="other">他に %1$d 件の権限</item>
+    </plurals>
     <string name="perm_internet">ネットワークへの完全なアクセス</string>
     <string name="perm_network_state">ネットワーク接続の確認</string>
     <string name="perm_wifi_state">Wi-Fi接続の確認</string>

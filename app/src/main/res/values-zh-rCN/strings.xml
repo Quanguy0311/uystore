@@ -102,7 +102,9 @@
     <string name="prov_signing">签名密钥</string>
     <string name="permissions_title">申请的权限</string>
     <string name="permissions_action">权限</string>
-    <string name="permissions_more">另有 %1$d 项权限</string>
+    <plurals name="permissions_more">
+        <item quantity="other">另有 %1$d 项权限</item>
+    </plurals>
     <string name="perm_internet">完全的网络访问权限</string>
     <string name="perm_network_state">查看网络连接</string>
     <string name="perm_wifi_state">查看 Wi-Fi 连接</string>
