@@ -141,6 +141,9 @@
     <string name="search_matches">Matches:</string>
 
     <string name="mine_title">My apps</string>
+    <string name="sort_default">Sort: Default</string>
+    <string name="sort_name">Sort: Name A–Z</string>
+    <string name="sort_date">Sort: Latest release date</string>
     <plurals name="updates_ready">
         <item quantity="one">%1$d update ready</item>
         <item quantity="other">%1$d updates ready</item>

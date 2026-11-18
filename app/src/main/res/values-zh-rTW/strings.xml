@@ -139,6 +139,9 @@
     <string name="search_matches">符合：</string>
 
     <string name="mine_title">我的應用程式</string>
+    <string name="sort_default">排序：預設</string>
+    <string name="sort_name">排序：名稱 A-Z</string>
+    <string name="sort_date">排序：依發佈日期最新在前</string>
     <plurals name="updates_ready">
         <item quantity="other">%1$d 個更新已就緒</item>
     </plurals>
