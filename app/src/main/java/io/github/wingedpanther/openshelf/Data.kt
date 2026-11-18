@@ -208,7 +208,7 @@ fun fetchText(url: String): String {
     }
 }
 
-data class ReleaseInfo(val tag: String, val notes: String, val apks: List<Apk>)
+data class ReleaseInfo(val tag: String, val notes: String, val apks: List<Apk>, val date: String = "")
 
 object GitHub {
     private val releases = HashMap<String, ReleaseInfo>()
@@ -228,17 +228,34 @@ object GitHub {
         val info = withContext(Dispatchers.IO) {
             runCatching {
                 val o = JSONObject(fetchText("https://api.github.com/repos/$repo/releases/tags/${java.net.URLEncoder.encode(tag, "UTF-8")}"))
-                val assets = o.getJSONArray("assets")
-                val all = (0 until assets.length()).map { assets.getJSONObject(it) }
-                    .filter { it.getString("name").endsWith(".apk", true) && !skip.containsMatchIn(it.getString("name")) }
-                    .map { Apk(it.getString("name"), abiOf(it.getString("name")), it.getString("browser_download_url"), it.getLong("size")) }
-                val tv = all.filter { tvHint.containsMatchIn(it.name) }
-                val apks = tv.ifEmpty { all.filterNot { phoneHint.containsMatchIn(it.name) }.ifEmpty { all } }
-                ReleaseInfo(tag, plain(o.optString("body")), apks)
+                info(o, tag)
             }.getOrNull()
         } ?: return null
         releases[key] = info
         return info
+    }
+
+    suspend fun latest(repo: String): ReleaseInfo? {
+        val key = "$repo@latest"
+        releases[key]?.let { return it }
+        val info = withContext(Dispatchers.IO) {
+            runCatching {
+                val o = JSONObject(fetchText("https://api.github.com/repos/$repo/releases/latest"))
+                if (o.optBoolean("prerelease") || o.optBoolean("draft")) null else info(o, o.getString("tag_name"))
+            }.getOrNull()
+        } ?: return null
+        releases[key] = info
+        return info
+    }
+
+    private fun info(o: JSONObject, tag: String): ReleaseInfo {
+        val assets = o.getJSONArray("assets")
+        val all = (0 until assets.length()).map { assets.getJSONObject(it) }
+            .filter { it.getString("name").endsWith(".apk", true) && !skip.containsMatchIn(it.getString("name")) }
+            .map { Apk(it.getString("name"), abiOf(it.getString("name")), it.getString("browser_download_url"), it.getLong("size")) }
+        val tv = all.filter { tvHint.containsMatchIn(it.name) }
+        val apks = tv.ifEmpty { all.filterNot { phoneHint.containsMatchIn(it.name) }.ifEmpty { all } }
+        return ReleaseInfo(tag, plain(o.optString("body")), apks, o.optString("published_at").take(10))
     }
 
     suspend fun screenshots(repo: String): List<String> {

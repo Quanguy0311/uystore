@@ -202,4 +202,18 @@
     <string name="older_failed">無法連線到 GitHub。請稍後再試。</string>
     <string name="action_cancel">取消</string>
     <string name="whats_new_short">更新內容</string>
+    <string name="link_action">連結</string>
+    <string name="link_cancel">取消</string>
+    <string name="link_confirm">驗證並連結</string>
+    <string name="link_err_abi">沒有符合這台電視架構的 APK。</string>
+    <string name="link_err_cert">APK 的簽章憑證與已安裝的應用程式不一致。</string>
+    <string name="link_err_duplicate">這個儲存庫已經連結。</string>
+    <string name="link_err_no_apk">這個發行版本沒有 APK 檔案。</string>
+    <string name="link_err_package">APK 的套件名稱與已安裝的應用程式不一致。</string>
+    <string name="link_err_release">找不到這個儲存庫的發行版本。</string>
+    <string name="link_err_url">這不是有效的 GitHub 儲存庫位址。</string>
+    <string name="link_hint">github.com/owner/repo</string>
+    <string name="link_title">連結 GitHub 儲存庫</string>
+    <string name="link_unlink">解除連結</string>
+    <string name="link_working">正在驗證…</string>
 </resources>

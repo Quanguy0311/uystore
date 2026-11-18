@@ -208,4 +208,18 @@
     <string name="older_failed">Couldn’t reach GitHub. Try again in a minute.</string>
     <string name="action_cancel">Cancel</string>
     <string name="whats_new_short">What’s new</string>
+    <string name="link_action">Link</string>
+    <string name="link_cancel">Cancel</string>
+    <string name="link_confirm">Verify and link</string>
+    <string name="link_err_abi">No APK matches this TV\'s architecture.</string>
+    <string name="link_err_cert">The APK signing certificate does not match the installed app.</string>
+    <string name="link_err_duplicate">This repository is already linked.</string>
+    <string name="link_err_no_apk">This release has no APK files.</string>
+    <string name="link_err_package">The APK package name does not match the installed app.</string>
+    <string name="link_err_release">Could not find a release for this repository.</string>
+    <string name="link_err_url">That is not a valid GitHub repository address.</string>
+    <string name="link_hint">github.com/owner/repo</string>
+    <string name="link_title">Link a GitHub repository</string>
+    <string name="link_unlink">Unlink</string>
+    <string name="link_working">Verifying…</string>
 </resources>

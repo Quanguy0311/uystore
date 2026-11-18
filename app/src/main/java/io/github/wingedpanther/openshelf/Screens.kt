@@ -177,7 +177,7 @@ fun OpenShelf() {
 
     Box(Modifier.fillMaxSize().background(C.Wall)) {
         Box(Modifier.fillMaxSize().padding(top = 70.dp)) {
-            val app = page?.let { Catalog.byId(it) }
+            val app = page?.let { Catalog.byId(it) ?: ManualLinks.byId(it) }
             val r = room
             if (app != null) {
                 AppPage(app, openApp, handoff)
@@ -1117,7 +1117,16 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
     val ctx = LocalContext.current
     val tick = Device.tick
     val self = SelfUpdate.app
-    val mine = remember(tick, self) { shelfApps(ctx) }
+    var manualApps by remember { mutableStateOf<List<App>>(emptyList()) }
+    LaunchedEffect(tick, ManualLinks.links) {
+        manualApps = if (ManualLinks.links.isEmpty()) emptyList()
+        else withContext(Dispatchers.IO) { ManualLinks.apps(ctx) }
+    }
+    val linked = ManualLinks.links.map { it.pkg }.toSet()
+    val mine = remember(tick, self, manualApps, ManualLinks.links) {
+        val manual = manualApps.mapNotNull { a -> Device.installed(ctx, a.pkg)?.let { a to it } }
+        manual + shelfApps(ctx).filterNot { it.first.pkg in linked }
+    }
     val sortedMine = remember(mine, Prefs.appSort) {
         when (AppSort.entries[Prefs.appSort]) {
             AppSort.Default -> mine
@@ -1126,7 +1135,8 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
         }
     }
     var others by remember { mutableStateOf<List<LocalApp>?>(null) }
-    LaunchedEffect(tick) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
+    LaunchedEffect(tick, mine) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
+    var linking by remember { mutableStateOf<Pair<String, String>?>(null) }
     fun state(a: App, i: Installed): State = when {
         Installer.busy(a.id) -> State.Busy
         Installer.jobs[a.id] is Job.Held || (a.certSha256 != null && i.certs.isNotEmpty() && a.certSha256 !in i.certs) -> State.Held
@@ -1174,7 +1184,10 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                 val first = updatable.isEmpty() && a == sortedMine.first().first
                 AppRow(
                     focusRequester = if (first) handoff.target else null,
-                    onClick = { if (st == State.Update) Installer.start(ctx, a) else openApp(a.id) },
+                    onClick = {
+                        if (st == State.Update) Installer.start(ctx, a)
+                        else openApp(a.id)
+                    },
                     icon = { AppIcon(a, 38.dp) },
                     title = a.name,
                     sub = when (st) {
@@ -1182,6 +1195,9 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         State.Held -> str(R.string.held_sub, i.versionName ?: "?")
                         else -> i.versionName ?: ""
                     },
+                    action = if (ManualLinks.has(a.pkg)) {
+                        { ActionPill(str(R.string.link_unlink)) { ManualLinks.remove(ctx, a.pkg) } }
+                    } else null,
                 ) { f ->
                     when (st) {
                         State.Busy -> {
@@ -1192,7 +1208,10 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         }
                         State.Update -> { Ico(Icons.Up, 17.dp, C.accent); T("  " + str(R.string.status_update_ready), 12.5.sp, color = C.Ink2, weight = FontWeight.Medium); MiniPill(str(R.string.action_update), f) }
                         State.Held -> { Ico(Icons.ShieldAlert, 17.dp, C.Ink); T("  " + str(R.string.update_held), 12.5.sp, weight = FontWeight.SemiBold); MiniPill(str(R.string.review), f) }
-                        State.Ok -> { Ico(Icons.Check, 17.dp, C.Stone); T("  " + str(R.string.up_to_date), 12.5.sp, color = C.Stone); MiniPill(str(R.string.details), f) }
+                        State.Ok -> {
+                            Ico(Icons.Check, 17.dp, C.Stone); T("  " + str(R.string.up_to_date), 12.5.sp, color = C.Stone)
+                            MiniPill(str(R.string.details), f)
+                        }
                     }
                 }
             }
@@ -1200,7 +1219,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                 item { Section(str(R.string.section_other)) }
                 items(otherList, key = { it.pkg }) { o ->
                     AppRow(
-                        focusRequester = if (mine.isEmpty() && o == otherList.first() && updatable.isEmpty()) null else null,
+                        focusRequester = null,
                         onClick = { launch(ctx, o.pkg) },
                         icon = {
                             Box(Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(C.WallDeep), contentAlignment = Alignment.Center) {
@@ -1209,9 +1228,79 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         },
                         title = o.label,
                         sub = listOfNotNull(o.version, str(R.string.not_in_list)).joinToString(" · "),
-                    ) { f -> MiniPill(str(R.string.action_open), f) }
+                        action = { ActionPill(str(R.string.link_action)) { linking = o.pkg to o.label } },
+                    ) { f ->
+                        MiniPill(str(R.string.action_open), f)
+                    }
                 }
             }
+        }
+    }
+    linking?.let { (pkg, label) ->
+        LinkDialog(
+            pkg = pkg,
+            label = label,
+            onDismiss = { linking = null },
+            onLinked = { linking = null },
+        )
+    }
+}
+
+@Composable
+private fun LinkDialog(pkg: String, label: String, onDismiss: () -> Unit, onLinked: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var repoInput by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val fieldRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = { if (!busy) onDismiss() }) {
+        Column(
+            Modifier.width(480.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.link_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            T(label, 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+            Box(
+                Modifier.padding(top = 16.dp).fillMaxWidth().height(50.dp)
+                    .clip(RoundedCornerShape(12.dp)).background(C.WallDeep)
+                    .border(1.dp, C.Hair2, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                BasicTextField(
+                    value = repoInput,
+                    onValueChange = { error = null; repoInput = it },
+                    singleLine = true,
+                    textStyle = TextStyle(fontFamily = Geist, fontSize = 16.sp, color = C.Ink),
+                    cursorBrush = SolidColor(C.accent),
+                    modifier = Modifier.fillMaxWidth().focusRequester(fieldRequester),
+                )
+                if (repoInput.isEmpty()) T(str(R.string.link_hint), 16.sp, color = C.Stone2)
+            }
+            error?.let { T(it, 12.5.sp, Modifier.padding(top = 8.dp), color = Color(0xFFC23B2E)) }
+            Row(
+                Modifier.padding(top = 20.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Pill(str(R.string.link_cancel), { if (!busy) onDismiss() })
+                Spacer(Modifier.width(10.dp))
+                Pill(
+                    if (busy) str(R.string.link_working) else str(R.string.link_confirm),
+                    {
+                        if (!busy && repoInput.isNotBlank()) {
+                            busy = true; error = null
+                            scope.launch {
+                                when (val result = ManualLinks.link(ctx, repoInput, pkg)) {
+                                    is LinkResult.Linked -> onLinked()
+                                    is LinkResult.Error -> { error = result.message; busy = false }
+                                }
+                            }
+                        }
+                    },
+                    solid = true, icon = if (busy) null else Icons.Download,
+                )
+            }
+            LaunchedEffect(Unit) { runCatching { fieldRequester.requestFocus() } }
         }
     }
 }
@@ -1228,22 +1317,26 @@ private fun AppRow(
     icon: @Composable () -> Unit,
     title: String,
     sub: String,
+    action: (@Composable () -> Unit)? = null,
     trailing: @Composable (Boolean) -> Unit,
 ) {
-    Focusable(onClick = onClick, requester = focusRequester) { f ->
-        Row(
-            Modifier.fillMaxWidth().height(56.dp).lift(f, 1.015f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
-                .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            icon()
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                T(title, 15.5.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-                T(sub, 11.5.sp, color = C.Stone, maxLines = 1)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Focusable(onClick = onClick, modifier = Modifier.weight(1f), requester = focusRequester) { f ->
+            Row(
+                Modifier.fillMaxWidth().height(56.dp).lift(f, 1.015f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
+                    .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                icon()
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    T(title, 15.5.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+                    T(sub, 11.5.sp, color = C.Stone, maxLines = 1)
+                }
+                trailing(f)
             }
-            trailing(f)
         }
+        action?.invoke()
     }
 }
 
@@ -1255,6 +1348,18 @@ private fun MiniPill(text: String, focused: Boolean) {
             .border(1.dp, if (focused) Color.Transparent else C.Hair2, CircleShape).padding(horizontal = 13.dp),
         contentAlignment = Alignment.Center,
     ) { T(text, 12.5.sp, color = if (focused) C.OnAccent else C.Ink, weight = FontWeight.SemiBold) }
+}
+
+@Composable
+private fun ActionPill(text: String, onClick: () -> Unit) {
+    Spacer(Modifier.width(14.dp))
+    Focusable(onClick = onClick) { focused ->
+        Box(
+            Modifier.height(28.dp).background(if (focused) C.accent else Color.Transparent, CircleShape)
+                .border(1.dp, if (focused) Color.Transparent else C.Hair2, CircleShape).padding(horizontal = 13.dp),
+            contentAlignment = Alignment.Center,
+        ) { T(text, 12.5.sp, color = if (focused) C.OnAccent else C.Ink, weight = FontWeight.SemiBold) }
+    }
 }
 
 private class Setting(val title: String, val value: String, val help: String, val action: () -> Unit = {})
