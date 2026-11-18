@@ -1195,10 +1195,10 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         State.Held -> str(R.string.held_sub, i.versionName ?: "?")
                         else -> i.versionName ?: ""
                     },
+                    action = if (ManualLinks.has(a.pkg)) {
+                        { ActionPill(str(R.string.link_unlink)) { ManualLinks.remove(ctx, a.pkg) } }
+                    } else null,
                 ) { f ->
-                    if (a != self) {
-                        ActionPill(str(R.string.link_action)) { linking = a.pkg to a.name }
-                    }
                     when (st) {
                         State.Busy -> {
                             val job = Installer.jobs[a.id]
@@ -1210,11 +1210,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         State.Held -> { Ico(Icons.ShieldAlert, 17.dp, C.Ink); T("  " + str(R.string.update_held), 12.5.sp, weight = FontWeight.SemiBold); MiniPill(str(R.string.review), f) }
                         State.Ok -> {
                             Ico(Icons.Check, 17.dp, C.Stone); T("  " + str(R.string.up_to_date), 12.5.sp, color = C.Stone)
-                            if (ManualLinks.has(a.pkg)) {
-                                ActionPill(str(R.string.link_unlink)) { ManualLinks.remove(ctx, a.pkg) }
-                            } else {
-                                MiniPill(str(R.string.details), f)
-                            }
+                            MiniPill(str(R.string.details), f)
                         }
                     }
                 }
@@ -1232,8 +1228,8 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                         },
                         title = o.label,
                         sub = listOfNotNull(o.version, str(R.string.not_in_list)).joinToString(" · "),
+                        action = { ActionPill(str(R.string.link_action)) { linking = o.pkg to o.label } },
                     ) { f ->
-                        ActionPill(str(R.string.link_action)) { linking = o.pkg to o.label }
                         MiniPill(str(R.string.action_open), f)
                     }
                 }
@@ -1321,22 +1317,26 @@ private fun AppRow(
     icon: @Composable () -> Unit,
     title: String,
     sub: String,
+    action: (@Composable () -> Unit)? = null,
     trailing: @Composable (Boolean) -> Unit,
 ) {
-    Focusable(onClick = onClick, requester = focusRequester) { f ->
-        Row(
-            Modifier.fillMaxWidth().height(56.dp).lift(f, 1.015f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
-                .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            icon()
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                T(title, 15.5.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
-                T(sub, 11.5.sp, color = C.Stone, maxLines = 1)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Focusable(onClick = onClick, modifier = Modifier.weight(1f), requester = focusRequester) { f ->
+            Row(
+                Modifier.fillMaxWidth().height(56.dp).lift(f, 1.015f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
+                    .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                icon()
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    T(title, 15.5.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+                    T(sub, 11.5.sp, color = C.Stone, maxLines = 1)
+                }
+                trailing(f)
             }
-            trailing(f)
         }
+        action?.invoke()
     }
 }
 
