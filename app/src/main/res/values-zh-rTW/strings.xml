@@ -96,7 +96,6 @@
     <string name="latest_month">最新，%1$s</string>
     <string name="archived_note">已被開發者封存，預期不會再有更新。</string>
     <string name="uninstall">解除安裝</string>
-    <string name="view_github">在 GitHub 上檢視</string>
     <string name="prov_released">發布時間</string>
     <string name="prov_download">下載</string>
     <string name="prov_signing">簽章金鑰</string>

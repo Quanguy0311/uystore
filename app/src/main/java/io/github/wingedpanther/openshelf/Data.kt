@@ -107,8 +107,6 @@ object Catalog {
         )
     }
 
-    const val MIN_STARS = 10
-
     private val STREAMS = Regex("iptv|\\bm3u8?\\b|xtream|debrid|torbox|torrserv|stremio|cloudstream|live ?tv\\b|电视直播|直播源|tvbox", RegexOption.IGNORE_CASE)
 
     fun shown(a: App) = !(Prefs.hideStreams && a.streams)
@@ -118,7 +116,7 @@ object Catalog {
         return visible.filter { (it.added ?: "") >= since }.sortedWith(compareByDescending<App> { it.added }.thenByDescending { it.stars })
     }
 
-    val visible: List<App> get() = apps.filter { (it.stars >= MIN_STARS || it.parentStars >= MIN_STARS) && shown(it) }
+    val visible: List<App> get() = apps.filter { (it.stars >= Prefs.minStars || it.parentStars >= Prefs.minStars) && shown(it) }
 
     fun forksOf(a: App): List<App> = apps.filter { it.forkOf == a.repo }
 
@@ -336,19 +334,37 @@ object L {
     }
 
     fun use(tag: String) {
-        val locale = if (tag.isEmpty()) android.content.res.Resources.getSystem().configuration.locales[0] else Locale.forLanguageTag(tag)
+        val picked = if (tag.isEmpty()) android.content.res.Resources.getSystem().configuration.locales[0] else Locale.forLanguageTag(tag)
+        val locale = if (picked.language == "ar") Locale.Builder().setLocale(picked).setUnicodeLocaleKeyword("nu", "latn").build() else picked
         Locale.setDefault(locale)
         val config = android.content.res.Configuration(app.resources.configuration).apply { setLocale(locale) }
         current = app.createConfigurationContext(config).resources
     }
+
+    val rtl get() = res.configuration.layoutDirection == android.view.View.LAYOUT_DIRECTION_RTL
+
+    fun wrap(s: String): String = when {
+        !rtl -> s
+        s.firstNotNullOfOrNull { strong(it) } == true -> "\u200F$s\u200F"
+        else -> "\u2066$s\u2069"
+    }
+
+    private fun strong(c: Char): Boolean? = when (Character.getDirectionality(c)) {
+        Character.DIRECTIONALITY_RIGHT_TO_LEFT, Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC -> true
+        Character.DIRECTIONALITY_LEFT_TO_RIGHT -> false
+        else -> null
+    }
+
+    fun isolate(args: Array<out Any>): Array<out Any> =
+        if (rtl) Array(args.size) { args[it].let { a -> if (a is String) wrap(a) else a } } else args
 
     fun name(tag: String): String =
         if (tag.isEmpty()) str(R.string.lang_match)
         else Locale.forLanguageTag(tag).let { it.getDisplayName(it).replaceFirstChar { c -> c.titlecase(it) } }
 }
 
-fun str(id: Int, vararg args: Any): String = L.res.getString(id, *args)
-fun plural(id: Int, n: Int, vararg args: Any): String = L.res.getQuantityString(id, n, *args)
+fun str(id: Int, vararg args: Any): String = L.res.getString(id, *L.isolate(args))
+fun plural(id: Int, n: Int, vararg args: Any): String = L.res.getQuantityString(id, n, *L.isolate(args))
 
 private val roomNames = mapOf(
     "Launchers" to R.string.room_launchers, "Screensavers" to R.string.room_screensavers, "VPN & network" to R.string.room_vpn,
@@ -382,8 +398,8 @@ object Fmt {
     fun date(d: String) = fmt(R.string.fmt_date, d)
     fun shortDate(d: String) = fmt(R.string.fmt_short_date, d)
     fun monthYear(d: String) = fmt(R.string.fmt_month_year, d)
-    fun mb(bytes: Long): String = String.format(Locale.getDefault(), "%.1f MB", bytes / 1_000_000.0)
-    fun gb(bytes: Long): String = String.format(Locale.getDefault(), "%.1f GB", bytes / 1_000_000_000.0)
+    fun mb(bytes: Long): String = L.wrap(String.format(Locale.getDefault(), "%.1f MB", bytes / 1_000_000.0))
+    fun gb(bytes: Long): String = L.wrap(String.format(Locale.getDefault(), "%.1f GB", bytes / 1_000_000_000.0))
     fun count(n: Int): String = NumberFormat.getIntegerInstance(Locale.getDefault()).format(n)
     fun stars(n: Int): String = if (n >= 1000) String.format(Locale.getDefault(), "%.1fk", n / 1000.0).replace(Regex("[.,]0k$"), "k") else "$n"
 }
@@ -518,6 +534,15 @@ object Prefs {
     var appSort by mutableIntStateOf(0)
         private set
 
+    val starSteps = listOf(10, 5, 0)
+    var minStars by mutableIntStateOf(10)
+        private set
+
+    fun nextStars() {
+        minStars = starSteps[(starSteps.indexOf(minStars) + 1) % starSteps.size]
+        file.edit().putInt("minStars", minStars).apply()
+    }
+
     fun toggleStreams() {
         hideStreams = !hideStreams
         file.edit().putBoolean("hideStreams", hideStreams).apply()
@@ -545,6 +570,7 @@ object Prefs {
         accent = file.getInt("accent", 0).coerceIn(accents.indices)
         theme = file.getInt("theme", 0).coerceIn(themes.indices)
         hideStreams = file.getBoolean("hideStreams", true)
+        minStars = file.getInt("minStars", 10).takeIf { it in starSteps } ?: 10
         autoCheckSelf = file.getBoolean("autoCheckSelf", true)
         appSort = file.getInt("appSort", 0).coerceIn(0..2)
         language = file.getInt("language", 0).coerceIn(languages.indices)
@@ -555,7 +581,7 @@ object Prefs {
         file.edit().putInt("theme", theme).apply()
     }
 
-    val languages = listOf("", "en", "de", "zh-CN", "zh-TW", "ja", "es")
+    val languages = listOf("", "en", "de", "zh-CN", "zh-TW", "ja", "es", "ar")
     var language by mutableIntStateOf(0)
         private set
 

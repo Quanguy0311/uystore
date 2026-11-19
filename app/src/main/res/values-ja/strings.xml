@@ -96,7 +96,6 @@
     <string name="latest_month">最新、%1$s</string>
     <string name="archived_note">開発者によりアーカイブされています。今後の更新は期待できません。</string>
     <string name="uninstall">アンインストール</string>
-    <string name="view_github">GitHubで表示</string>
     <string name="prov_released">リリース日</string>
     <string name="prov_download">ダウンロード</string>
     <string name="prov_signing">署名キー</string>

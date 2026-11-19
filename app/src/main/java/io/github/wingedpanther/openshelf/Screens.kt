@@ -199,7 +199,7 @@ fun OpenShelf() {
             backLabel = if (page != null) room?.let(::roomName) ?: str(tab.label) else str(tab.label),
             onBack = closePage,
             requesters = tabRequesters,
-            onTab = { if (page == null) tab = it },
+            onTab = { page = null; room = null; tab = it },
             onTabsFocus = { tabsFocused = it },
             updates = updates,
         )
@@ -302,9 +302,8 @@ private fun TopBar(
             Tab.entries.forEach { t ->
                 Focusable(
                     onClick = { onTab(t) },
-                    modifier = Modifier.focusProperties { canFocus = !deep },
                     requester = requesters.getValue(t),
-                    onFocus = { onTab(t) },
+                    onFocus = { if (!deep) onTab(t) },
                 ) { f ->
                     val selected = t == tab
                     Row(
@@ -363,7 +362,7 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
                                 T(a.note, 15.5.sp, Modifier.padding(top = 11.dp).width(330.dp), color = C.Ink2, maxLines = 2)
                                 Box(Modifier.padding(top = 15.dp).fillMaxWidth().height(1.dp).background(C.Hair))
                                 Column(Modifier.padding(top = 11.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                    Fact(str(R.string.fact_version), "${a.version}, ${Fmt.date(a.date)}")
+                                    Fact(str(R.string.fact_version), "${L.wrap(a.version)}, ${L.wrap(Fmt.date(a.date))}")
                                     Fact(str(R.string.fact_licence), a.licence ?: str(R.string.licence_unknown))
                                     Fact(str(R.string.fact_stars), Fmt.count(a.stars))
                                 }
@@ -795,7 +794,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
             Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
                 Row {
-                    Prov(Icons.Calendar, str(R.string.prov_released), "${app.version}, ${Fmt.date(app.date)}", Modifier.weight(1f))
+                    Prov(Icons.Calendar, str(R.string.prov_released), "${L.wrap(app.version)}, ${L.wrap(Fmt.date(app.date))}", Modifier.weight(1f))
                     Prov(Icons.Star, str(R.string.fact_stars), Fmt.count(app.stars), Modifier.weight(1f))
                 }
                 Row {
@@ -819,7 +818,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 Modifier.padding(top = 14.dp).offset(x = (-4).dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                if (browser) Pill(str(R.string.view_github), { openRepo(ctx, app.repo) }, icon = Icons.Link)
+                if (browser) Pill("GitHub", { openRepo(ctx, app.repo) }, icon = Icons.Link)
                 if (notes != null) Pill(str(R.string.whats_new_short), { showNotes = true })
                 if (permissions.isNotEmpty()) Pill(str(R.string.permissions_action), { showPermissions = true })
             }
@@ -1087,8 +1086,8 @@ private fun search(q: String): List<Pair<App, Boolean>> {
         val byName = a.name.lowercase().contains(q)
         val all = words.all { w -> hay.contains(w) || (w.endsWith("s") && hay.contains(w.dropLast(1))) }
         when {
-            byName && (a.stars >= Catalog.MIN_STARS || a.name.lowercase() == q) -> a to true
-            all && a.stars >= Catalog.MIN_STARS -> a to false
+            byName && (a.stars >= Prefs.minStars || a.name.lowercase() == q) -> a to true
+            all && a.stars >= Prefs.minStars -> a to false
             else -> null
         }
     }.sortedWith(compareByDescending<Pair<App, Boolean>> { it.second }.thenByDescending { it.first.stars })
@@ -1200,7 +1199,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                     add(str(R.string.from_shelf_count, mine.count { it.first != self }))
                     if (others != null) add(plural(R.plurals.other_apps, otherList.size, otherList.size))
                 }
-                T(parts.joinToString(" · "), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+                T(parts.joinToString(" · ", transform = L::wrap), 13.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             }
             val sortText = when (AppSort.entries[Prefs.appSort]) {
                 AppSort.Default -> str(R.string.sort_default)
@@ -1235,7 +1234,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                     icon = { AppIcon(a, 38.dp) },
                     title = a.name,
                     sub = when (st) {
-                        State.Update -> "${i.versionName} → ${a.version} · ${Fmt.mb(pickApk(a).size)}"
+                        State.Update -> "\u2066${i.versionName} → ${a.version}\u2069 · ${Fmt.mb(pickApk(a).size)}"
                         State.Held -> str(R.string.held_sub, i.versionName ?: "?")
                         else -> i.versionName ?: ""
                     },
@@ -1271,7 +1270,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                             }
                         },
                         title = o.label,
-                        sub = listOfNotNull(o.version, str(R.string.not_in_list)).joinToString(" · "),
+                        sub = listOfNotNull(o.version, str(R.string.not_in_list)).joinToString(" · ", transform = L::wrap),
                         action = { ActionPill(str(R.string.link_action)) { linking = o.pkg to o.label } },
                     ) { f ->
                         MiniPill(str(R.string.action_open), f)
@@ -1406,7 +1405,7 @@ private fun ActionPill(text: String, onClick: () -> Unit) {
     }
 }
 
-private class Setting(val title: String, val value: String, val help: String, val action: () -> Unit = {})
+private class Setting(val title: String, val value: String, val help: String, val action: (() -> Unit)? = null)
 
 @Composable
 private fun SettingsScreen(handoff: FocusHandoff) {
@@ -1436,8 +1435,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_self_update_help)) { Prefs.toggleAutoCheck() },
         Setting(str(R.string.set_catalog), str(R.string.catalog_value, Fmt.count(Catalog.apps.size), Fmt.shortDate(Catalog.generated)),
             str(R.string.catalog_help, Fmt.date(Catalog.generated))),
-        Setting(str(R.string.set_stars), "${Catalog.MIN_STARS}",
-            str(R.string.set_stars_help, Fmt.count(Catalog.apps.count { it.stars < Catalog.MIN_STARS }))),
+        Setting(str(R.string.set_stars), if (Prefs.minStars > 0) "${Prefs.minStars}" else str(R.string.off),
+            str(R.string.set_stars_help, Fmt.count(Catalog.apps.count { it.stars < Prefs.minStars }))) { Prefs.nextStars() },
         Setting(str(R.string.set_streams), if (Prefs.hideStreams) str(R.string.streams_on, Fmt.count(Catalog.apps.count { it.streams })) else str(R.string.streams_off),
             str(R.string.set_streams_help)) { Prefs.toggleStreams() },
         Setting(str(R.string.set_cache), str(R.string.cache_value, Fmt.mb(cache)),
@@ -1468,7 +1467,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
         Spacer(Modifier.width(52.dp))
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             rows.forEachIndexed { i, s ->
-                Focusable(s.action, requester = if (i == 0) handoff.target else null, onFocus = { focusedIndex = i }) { f ->
+                Focusable(s.action ?: {}, requester = if (i == 0) handoff.target else null, onFocus = { focusedIndex = i }) { f ->
                     Row(
                         Modifier.fillMaxWidth().height(40.dp).lift(f, 1.02f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
                             .background(if (f) C.Mat else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 15.dp),
@@ -1477,7 +1476,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                         T(s.title, 14.5.sp, Modifier.weight(1f), weight = FontWeight.Medium, maxLines = 1)
                         if (i == 0) { Dot(9.dp); Spacer(Modifier.width(7.dp)) }
                         T(s.value, 13.5.sp, color = if (f) C.Ink2 else C.Stone, maxLines = 1)
-                        Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
+                        if (s.action != null) Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
                     }
                 }
                 if (i == 6 || i == 9) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))

@@ -25,7 +25,7 @@ Questions, app suggestions and release news: [join the Discord](https://discord.
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 - When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
-- In English, German, Japanese and Chinese (Simplified and Traditional), with a language switch in Settings
+- In English, German, Spanish, Arabic, Japanese and Chinese (Simplified and Traditional), with a language switch in Settings. Arabic runs right to left
 - Updates itself: when a new version is out, Open Shelf offers to install it
 
 ## Screenshots

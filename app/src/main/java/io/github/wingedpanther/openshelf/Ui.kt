@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -104,7 +105,7 @@ fun T(
         text, modifier,
         style = TextStyle(
             fontFamily = Geist, fontSize = size, color = color, fontWeight = weight,
-            letterSpacing = if (tight) (-0.025).em else 0.em, lineHeight = size * 1.3f,
+            letterSpacing = if (tight) (-0.025).em else 0.em, lineHeight = size * 1.3f, textDirection = textDirection(),
         ),
         maxLines = maxLines, overflow = TextOverflow.Ellipsis,
     )
@@ -114,13 +115,15 @@ fun T(
 fun T(text: AnnotatedString, size: TextUnit, modifier: Modifier = Modifier, color: Color = C.Ink, maxLines: Int = Int.MAX_VALUE) {
     BasicText(
         text, modifier,
-        style = TextStyle(fontFamily = Geist, fontSize = size, color = color, lineHeight = size * 1.3f),
+        style = TextStyle(fontFamily = Geist, fontSize = size, color = color, lineHeight = size * 1.3f, textDirection = textDirection()),
         maxLines = maxLines, overflow = TextOverflow.Ellipsis,
     )
 }
 
-private fun icon(vararg paths: String): ImageVector = ImageVector.Builder(
-    defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+private fun textDirection() = if (L.rtl) TextDirection.ContentOrRtl else TextDirection.ContentOrLtr
+
+private fun icon(vararg paths: String, mirror: Boolean = false): ImageVector = ImageVector.Builder(
+    defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f, autoMirror = mirror,
 ).apply {
     paths.forEach {
         addPath(
@@ -137,8 +140,8 @@ object Icons {
     val Up = icon("M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z", "M12 16.5v-9M8 11l4-4 4 4")
     val Shield = icon("M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z", "M8.5 12l2.5 2.5 4.5-5")
     val ShieldAlert = icon("M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z", "M12 8v5M12 16.5v0.01")
-    val ChevRight = icon("M9 5l7 7-7 7")
-    val ChevLeft = icon("M15 5l-7 7 7 7")
+    val ChevRight = icon("M9 5l7 7-7 7", mirror = true)
+    val ChevLeft = icon("M15 5l-7 7 7 7", mirror = true)
     val ChevDown = icon("M5 9l7 7 7-7")
     val Delete = icon("M9 6h11v12H9l-6-6z", "M12.5 9.5l5 5M17.5 9.5l-5 5")
     val Play = icon("M8 5.5v13l10.5-6.5z")

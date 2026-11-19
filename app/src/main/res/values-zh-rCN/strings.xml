@@ -96,7 +96,6 @@
     <string name="latest_month">最新，%1$s</string>
     <string name="archived_note">已被开发者归档，预计不会再有更新。</string>
     <string name="uninstall">卸载</string>
-    <string name="view_github">在 GitHub 上查看</string>
     <string name="prov_released">发布时间</string>
     <string name="prov_download">下载</string>
     <string name="prov_signing">签名密钥</string>

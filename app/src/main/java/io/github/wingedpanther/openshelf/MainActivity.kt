@@ -4,6 +4,9 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +16,9 @@ class MainActivity : ComponentActivity() {
         L.init(this)
         Images.init(this)
         Prefs.systemDark = isNight(resources.configuration)
-        setContent { OpenShelf() }
+        setContent {
+            CompositionLocalProvider(LocalLayoutDirection provides if (L.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) { OpenShelf() }
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

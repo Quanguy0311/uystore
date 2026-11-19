@@ -97,7 +97,6 @@
     <string name="latest_month">Última, %1$s</string>
     <string name="archived_note">Archivada por su desarrollador. No se esperan más actualizaciones.</string>
     <string name="uninstall">Desinstalar</string>
-    <string name="view_github">Ver en GitHub</string>
     <string name="prov_released">Publicación</string>
     <string name="prov_download">Descarga</string>
     <string name="prov_signing">Clave de firma</string>
@@ -207,4 +206,36 @@
     <string name="older_failed">No se ha podido conectar con GitHub. Inténtalo de nuevo en un minuto.</string>
     <string name="action_cancel">Cancelar</string>
     <string name="whats_new_short">Novedades</string>
+    <string name="permissions_title">Permisos solicitados</string>
+    <string name="permissions_action">Permisos</string>
+    <plurals name="permissions_more">
+        <item quantity="one">%1$d permiso más</item>
+        <item quantity="other">%1$d permisos más</item>
+    </plurals>
+    <string name="perm_internet">Acceso completo a la red</string>
+    <string name="perm_network_state">Ver conexiones de red</string>
+    <string name="perm_wifi_state">Ver conexiones Wi-Fi</string>
+    <string name="perm_wake_lock">Impedir que el dispositivo entre en reposo</string>
+    <string name="perm_foreground_service">Ejecutar un servicio en primer plano</string>
+    <string name="perm_boot">Iniciarse al encender</string>
+    <string name="perm_install_packages">Solicitar la instalación de paquetes</string>
+    <string name="perm_storage_read">Leer el almacenamiento compartido</string>
+    <string name="perm_storage_write">Modificar el almacenamiento compartido</string>
+    <string name="perm_record_audio">Micrófono</string>
+    <string name="perm_overlay">Mostrar sobre otras apps</string>
+    <string name="perm_query_packages">Ver todas las apps instaladas</string>
+    <string name="link_action">Vincular</string>
+    <string name="link_cancel">Cancelar</string>
+    <string name="link_confirm">Verificar y vincular</string>
+    <string name="link_err_abi">Ningún APK es compatible con la arquitectura de este televisor.</string>
+    <string name="link_err_cert">El certificado de firma del APK no coincide con el de la app instalada.</string>
+    <string name="link_err_duplicate">Este repositorio ya está vinculado.</string>
+    <string name="link_err_no_apk">Esta versión no tiene archivos APK.</string>
+    <string name="link_err_package">El nombre de paquete del APK no coincide con el de la app instalada.</string>
+    <string name="link_err_release">No se ha encontrado ninguna versión de este repositorio.</string>
+    <string name="link_err_url">Esa no es una dirección válida de un repositorio de GitHub.</string>
+    <string name="link_hint">github.com/owner/repo</string>
+    <string name="link_title">Vincular un repositorio de GitHub</string>
+    <string name="link_unlink">Desvincular</string>
+    <string name="link_working">Verificando…</string>
 </resources>
