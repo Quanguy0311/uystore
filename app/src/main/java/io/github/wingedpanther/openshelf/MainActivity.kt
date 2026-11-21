@@ -1,5 +1,6 @@
 package io.github.wingedpanther.openshelf
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,12 +14,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Prefs.init(this)
         ManualLinks.init(this)
+        Lock.init(this)
         L.init(this)
         Images.init(this)
         Prefs.systemDark = isNight(resources.configuration)
+        Links.pending = intent?.data
         setContent {
             CompositionLocalProvider(LocalLayoutDirection provides if (L.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) { OpenShelf() }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.data?.let { Links.pending = it }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

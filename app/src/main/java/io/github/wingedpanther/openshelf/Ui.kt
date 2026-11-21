@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -152,6 +153,7 @@ object Icons {
     val Scale = icon("M12 4v16M7 20h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0zM19 7l-2.5 6a3 3 0 0 0 5 0z")
     val Box = icon("M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z", "M3.5 7.5L12 12l8.5-4.5M12 12v9")
     val Trash = icon("M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13")
+    val Help = icon("M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z", "M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.01")
     val Mic = icon("M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z", "M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7")
     val Link = icon("M14 4h6v6M20 4l-9 9", "M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10")
 }
@@ -301,7 +303,7 @@ fun openRepo(ctx: Context, repo: String) {
     runCatching { ctx.startActivity(repoIntent(repo)) }
 }
 
-fun uninstall(ctx: Context, pkg: String) {
+fun uninstall(ctx: Context, pkg: String) = Lock.guard {
     val intent = Intent(Intent.ACTION_DELETE, android.net.Uri.parse("package:$pkg")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { ctx.startActivity(intent) }
 }
@@ -345,9 +347,15 @@ fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true
 }
 
 @Composable
-fun JobNote(app: App, modifier: Modifier = Modifier) {
+fun JobNote(app: App, modifier: Modifier = Modifier, helpButton: Boolean = true) {
+    var help by remember { mutableStateOf(false) }
     when (val job = Installer.jobs[app.id]) {
-        is Job.Failed -> T(job.message, 12.5.sp, modifier, color = C.Ink2, maxLines = 4)
+        is Job.Failed -> androidx.compose.foundation.layout.Column(modifier) {
+            T(job.message, 12.5.sp, color = C.Ink2, maxLines = 4)
+            if (helpButton && Help.applies(job.message)) {
+                Pill(str(R.string.help_action), { help = true }, Modifier.padding(top = 4.dp).offset(x = (-4).dp), icon = Icons.Help)
+            }
+        }
         is Job.Held -> Row(
             modifier.clip(RoundedCornerShape(10.dp)).background(C.WallDeep).padding(12.dp),
             verticalAlignment = Alignment.Top,
@@ -358,4 +366,5 @@ fun JobNote(app: App, modifier: Modifier = Modifier) {
         }
         else -> {}
     }
+    if (help) HelpDialog { help = false }
 }

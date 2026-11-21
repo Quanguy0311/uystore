@@ -63,25 +63,48 @@ data class App(
     val parentStars: Int,
     val added: String? = null,
     val basedOn: String? = null,
+    val pushed: String? = null,
+    val downloads: Int = 0,
+    val perms: List<String> = emptyList(),
+    val trend: Int = 0,
+    val code: Int? = null,
 ) {
     val runsHere: Boolean get() = unsupported(this) == null
+}
+
+data class Pack(val id: String, val title: String, val repos: List<String>) {
+    val apps: List<App> get() = repos.mapNotNull { Catalog.byRepo(it) }
 }
 
 object Catalog {
     var apps by mutableStateOf<List<App>>(emptyList())
         private set
+    var packs by mutableStateOf<List<Pack>>(emptyList())
+        private set
     var generated: String = ""
+        private set
+    var trendSince: String? = null
         private set
 
     suspend fun load(ctx: Context) {
         if (apps.isNotEmpty()) return
-        val parsed = withContext(Dispatchers.IO) {
-            val root = JSONObject(ctx.assets.open("catalog.json").bufferedReader().use { it.readText() })
-            generated = root.getString("generated")
+        reload(ctx)
+    }
+
+    suspend fun reload(ctx: Context) {
+        val (root, list) = withContext(Dispatchers.IO) {
+            val bundled = JSONObject(ctx.assets.open("catalog.json").bufferedReader().use { it.readText() })
+            val fetched = runCatching { JSONObject(CatalogUpdate.file(ctx).readText()) }.getOrNull()
+            val root = if (fetched != null && fetched.getString("generated") > bundled.getString("generated")) fetched else bundled
             val list = root.getJSONArray("apps")
-            (0 until list.length()).map { parse(list.getJSONObject(it)) }.filter { it.apks.isNotEmpty() }
+            root to (0 until list.length()).map { parse(list.getJSONObject(it)) }.filter { it.apks.isNotEmpty() }
         }
-        apps = parsed
+        generated = root.getString("generated")
+        trendSince = root.optString("trendSince").ifEmpty { null }
+        packs = root.optJSONArray("packs")?.objects()?.map { p ->
+            Pack(p.getString("id"), p.getString("title"), p.getJSONArray("repos").let { r -> (0 until r.length()).map { r.getString(it) } })
+        }.orEmpty()
+        apps = list
     }
 
     private fun JSONObject.str(k: String): String? = if (has(k) && !isNull(k)) getString(k) else null
@@ -104,6 +127,9 @@ object Catalog {
             apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi").let { a -> if (a == "any") abiOf(it.getString("name")) else a }, it.getString("url"), it.getLong("size")) },
             releases = o.getJSONArray("releases").objects().map { Release(it.getString("tag"), it.getString("date")) },
             forkOf = o.str("forkOf"), parentStars = o.optInt("parentStars"), added = o.str("added"), basedOn = o.str("basedOn"),
+            pushed = o.str("pushed"), downloads = o.optInt("downloads"),
+            perms = o.optJSONArray("perms")?.let { a -> (0 until a.length()).map { a.getString(it) } }.orEmpty(),
+            trend = o.optInt("trend"), code = if (o.has("code")) o.getInt("code") else null,
         )
     }
 
@@ -118,6 +144,10 @@ object Catalog {
 
     val visible: List<App> get() = apps.filter { (it.stars >= Prefs.minStars || it.parentStars >= Prefs.minStars) && shown(it) }
 
+    fun trending(): List<App> = visible.filter { it.trend > 0 }.sortedByDescending { it.trend }
+
+    fun byCode(code: String): App? = apps.firstOrNull { it.code?.toString() == code }
+
     fun forksOf(a: App): List<App> = apps.filter { it.forkOf == a.repo }
 
     fun byRepo(repo: String): App? = apps.firstOrNull { it.repo == repo }
@@ -126,6 +156,58 @@ object Catalog {
         apps.firstOrNull { it.pkg == a.pkg && it.id != a.id && it.certSha256 != null && it.certSha256 in i.certs }
 
     fun byId(id: String): App? = apps.firstOrNull { it.id == id } ?: SelfUpdate.app?.takeIf { it.id == id }
+}
+
+object Help {
+    private val brands = listOf("google", "sony", "xiaomi", "tcl", "philips", "hisense", "nvidia", "amazon", "onn", "jio", "airtel", "tata", "skyworth", "toshiba", "sharp", "panasonic")
+    private val operators = setOf("jio", "airtel", "tata")
+
+    val brand: String get() = Build.MANUFACTURER.lowercase().let { m -> brands.firstOrNull { it in m } ?: "other" }
+    val operator: Boolean get() = brand in operators || Build.MODEL.lowercase().let { "jio" in it || "airtel" in it }
+    val url: String get() = "https://wingedpanther.github.io/openshelf/help.html#$brand"
+
+    fun applies(message: String) = message in listOf(
+        str(R.string.err_allow_install), str(R.string.err_blocked), str(R.string.err_install_timeout),
+    ) || message.startsWith(str(R.string.err_allow_install_stuck, "").take(20))
+}
+
+object CatalogUpdate {
+    private const val BASE = "https://wingedpanther.github.io/openshelf/"
+    private const val KEY = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAED2a7uym6JtB/aT5HoGy5eJWUiPD3LQ3oSgpJ9qLm/oLzZk5FqD741D1Lu8CW1F2gote9xH6iPxylektADgB75w=="
+    private const val EVERY = 12 * 60 * 60 * 1000L
+
+    fun file(ctx: Context) = File(ctx.filesDir, "catalog.json")
+
+    suspend fun check(ctx: Context) {
+        val prefs = ctx.getSharedPreferences("catalog", Context.MODE_PRIVATE)
+        val now = System.currentTimeMillis()
+        if (now - prefs.getLong("at", 0) < EVERY) return
+        val fresh = withContext(Dispatchers.IO) {
+            runCatching {
+                val latest = JSONObject(fetchText(BASE + "version.json")).getString("generated")
+                if (latest <= Catalog.generated) return@runCatching false
+                val bytes = fetchBytes(BASE + "catalog.json")
+                val sig = android.util.Base64.decode(fetchText(BASE + "catalog.sig").trim(), android.util.Base64.DEFAULT)
+                if (!verify(bytes, sig)) return@runCatching false
+                if (JSONObject(String(bytes)).getString("generated") <= Catalog.generated) return@runCatching false
+                val part = File(file(ctx).path + ".part")
+                part.writeBytes(bytes)
+                part.renameTo(file(ctx))
+            }.getOrNull()
+        } ?: return
+        prefs.edit().putLong("at", now).apply()
+        if (fresh) Catalog.reload(ctx)
+    }
+
+    fun verify(data: ByteArray, sig: ByteArray): Boolean = runCatching {
+        val key = java.security.KeyFactory.getInstance("EC")
+            .generatePublic(java.security.spec.X509EncodedKeySpec(android.util.Base64.decode(KEY, android.util.Base64.DEFAULT)))
+        java.security.Signature.getInstance("SHA256withECDSA").run {
+            initVerify(key)
+            update(data)
+            verify(sig)
+        }
+    }.getOrDefault(false)
 }
 
 object SelfUpdate {
@@ -190,6 +272,19 @@ object SelfUpdate {
         return false
     }
 
+}
+
+fun fetchBytes(url: String): ByteArray {
+    val conn = URL(url).openConnection() as HttpURLConnection
+    return try {
+        conn.connectTimeout = 15_000
+        conn.readTimeout = 60_000
+        conn.setRequestProperty("User-Agent", "OpenShelf (+https://github.com/wingedpanther/openshelf)")
+        if (conn.responseCode !in 200..299) error("HTTP ${conn.responseCode}")
+        conn.inputStream.use { it.readBytes() }
+    } finally {
+        conn.disconnect()
+    }
 }
 
 fun fetchText(url: String): String {
@@ -379,7 +474,7 @@ fun plural(id: Int, n: Int, vararg args: Any): String = L.res.getQuantityString(
 
 private val roomNames = mapOf(
     "Launchers" to R.string.room_launchers, "Screensavers" to R.string.room_screensavers, "VPN & network" to R.string.room_vpn,
-    "Streaming" to R.string.room_streaming, "App stores" to R.string.room_stores, "Games" to R.string.room_games,
+    "Streaming" to R.string.room_streaming, "Video players" to R.string.room_players, "App stores" to R.string.room_stores, "Games" to R.string.room_games,
     "Music" to R.string.room_music, "Video" to R.string.room_video, "Smart home" to R.string.room_home,
     "Photos" to R.string.room_photos, "Reading" to R.string.room_reading, "Learning" to R.string.room_learning,
     "Chat & social" to R.string.room_chat, "AI" to R.string.room_ai, "Browsers" to R.string.room_browsers,
@@ -412,6 +507,7 @@ object Fmt {
     fun mb(bytes: Long): String = L.wrap(String.format(Locale.getDefault(), "%.1f MB", bytes / 1_000_000.0))
     fun gb(bytes: Long): String = L.wrap(String.format(Locale.getDefault(), "%.1f GB", bytes / 1_000_000_000.0))
     fun count(n: Int): String = NumberFormat.getIntegerInstance(Locale.getDefault()).format(n)
+    fun downloads(n: Int): String = "↓ " + if (n >= 1_000_000) String.format(Locale.getDefault(), "%.1fM", n / 1_000_000.0).replace(Regex("[.,]0M$"), "M") else stars(n)
     fun stars(n: Int): String = if (n >= 1000) String.format(Locale.getDefault(), "%.1fk", n / 1000.0).replace(Regex("[.,]0k$"), "k") else "$n"
 }
 

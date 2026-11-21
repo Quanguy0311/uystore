@@ -47,7 +47,9 @@ object Installer {
             .onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
     }
 
-    fun start(ctx: Context, app: App) {
+    fun start(ctx: Context, app: App) = Lock.guard { begin(ctx, app) }
+
+    private fun begin(ctx: Context, app: App) {
         val appCtx = ctx.applicationContext
         if (busy(app.id)) return
         if (!canInstall(appCtx)) {

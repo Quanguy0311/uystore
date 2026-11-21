@@ -143,7 +143,7 @@ fun OpenShelf() {
     var lastRoom by remember { mutableStateOf<String?>(null) }
     var lastInRoom by remember { mutableStateOf<String?>(null) }
     val roomGrid = remember(room) { LazyGridState() }
-    var roomRecent by remember(room) { mutableStateOf(false) }
+    var roomSort by remember(room) { mutableIntStateOf(0) }
     var tabsFocused by remember { mutableStateOf(false) }
     val tabRequesters = remember { Tab.entries.associateWith { FocusRequester() } }
     val handoff = remember { FocusHandoff() }
@@ -151,6 +151,7 @@ fun OpenShelf() {
     LaunchedEffect(Device.tick) {
         Catalog.load(ctx)
         if (Prefs.autoCheckSelf) SelfUpdate.check(ctx)
+        CatalogUpdate.check(ctx)
     }
     if (Catalog.apps.isEmpty()) {
         Box(Modifier.fillMaxSize().background(C.Wall), contentAlignment = Alignment.Center) {
@@ -164,6 +165,20 @@ fun OpenShelf() {
     }
 
     val updates = remember(Device.tick, SelfUpdate.app) { updateCount(ctx) }
+    LaunchedEffect(updates, Catalog.apps) {
+        val ready = shelfApps(ctx).filter { (a, i) -> a.id != "openshelf" && i.versionCode < a.versionCode && (a.certSha256 == null || i.certs.isEmpty() || a.certSha256 in i.certs) }
+        val picks = Catalog.trending().take(8).ifEmpty { Catalog.added().take(8) }
+        withContext(Dispatchers.IO) { HomeRow.sync(ctx, ready, picks) }
+    }
+    LaunchedEffect(Links.pending, Catalog.apps) {
+        val link = Links.pending ?: return@LaunchedEffect
+        when (link.host) {
+            "app" -> link.lastPathSegment?.let { id -> if (Catalog.byId(id) != null) { room = null; page = id } }
+            "mine" -> { page = null; room = null; tab = Tab.Mine }
+        }
+        handoff.pending = true
+        Links.pending = null
+    }
     val openApp: (String) -> Unit = { page = it; handoff.pending = true }
     val openRoom: (String) -> Unit = { room = it; lastRoom = it; lastInRoom = null; handoff.pending = true }
     val closePage = {
@@ -186,13 +201,13 @@ fun OpenShelf() {
             if (app != null) {
                 AppPage(app, openApp, handoff)
             } else if (r != null) {
-                RoomPage(r, roomGrid, roomRecent, { roomRecent = it }, lastInRoom, { lastInRoom = it }, openApp, handoff)
+                RoomPage(r, roomGrid, roomSort, { roomSort = it }, lastInRoom, { lastInRoom = it }, openApp, handoff)
             } else when (tab) {
                 Tab.Discover -> Discover(wallId, { wallId = it }, openApp, openRoom, handoff)
                 Tab.Categories -> Categories(lastRoom, openRoom, handoff)
                 Tab.Search -> SearchScreen(query, { query = it }, openApp, handoff)
                 Tab.Mine -> MyApps(openApp, { tab = Tab.Discover; handoff.pending = true }, handoff)
-                Tab.Settings -> SettingsScreen(handoff)
+                Tab.Settings -> SettingsScreen(openApp, handoff)
             }
         }
         TopBar(
@@ -216,6 +231,10 @@ fun OpenShelf() {
             onUpdate = { selfDismissed = true; Installer.start(ctx, selfApp) },
             onLater = { selfDismissed = true; SelfUpdate.ignore(ctx, selfApp.version) },
         )
+    }
+
+    if (Lock.pending.isNotEmpty()) {
+        PinDialog(str(R.string.pin_enter), onClose = { Lock.pending.clear() }) { Lock.release() }
     }
 
     LaunchedEffect(handoff.pending, page, room, tab) {
@@ -382,43 +401,124 @@ private fun Discover(wallId: String, onWall: (String) -> Unit, openApp: (String)
         val recent = remember(Prefs.hideStreams) { Catalog.visible.sortedByDescending { it.date }.take(40) }
         val starred = remember(Prefs.hideStreams) { Catalog.visible.take(40) }
         val fresh = remember(Prefs.hideStreams) { Catalog.added().take(40) }
-        val shift = if (fresh.isEmpty()) 0 else 1
+        val trending = remember(Prefs.hideStreams) { Catalog.trending().take(40) }
+        val packs = Catalog.packs
+        var pack by remember { mutableStateOf<Pack?>(null) }
         val rooms = remember(Prefs.hideStreams) { roomsOf() }
         fun meta(a: App) = status(ctx, a)
         @Suppress("UNUSED_VARIABLE") val watch = tick
         val rowsState = rememberLazyListState()
         val spec = LocalBringIntoViewSpec.current
+        fun tiles(list: List<App>, label: (App) -> String): androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
+            items(list, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { label(a) }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
+        }
+        val shelves = buildList {
+            add(Shelf(str(R.string.row_tv), str(R.string.row_tv_sub), tiles(tv) { "★ ${Fmt.stars(it.stars)}" }))
+            if (packs.isNotEmpty()) add(Shelf(str(R.string.row_packs), str(R.string.row_packs_sub)) {
+                items(packs, key = { it.id }) { p -> PackCard(p) { pack = p } }
+            })
+            if (fresh.isNotEmpty()) add(Shelf(str(R.string.row_new), str(R.string.row_new_sub), tiles(fresh) { "★ ${Fmt.stars(it.stars)}" }))
+            if (trending.isNotEmpty()) add(Shelf(str(R.string.row_trending), Catalog.trendSince?.let { str(R.string.row_trending_sub, Fmt.shortDate(it)) }, tiles(trending) { "★ +${Fmt.count(it.trend)}" }))
+            add(Shelf(str(R.string.row_recent), str(R.string.row_recent_sub), tiles(recent) { Fmt.shortDate(it.date) }))
+            add(Shelf(str(R.string.row_starred), null, tiles(starred) { "★ ${Fmt.stars(it.stars)}" }))
+            add(Shelf(str(R.string.row_categories), str(R.string.row_categories_sub)) {
+                items(rooms, key = { it.first }) { (room, apps) -> RoomCard(room, apps.size) { openRoom(room) } }
+            })
+        }
         CompositionLocalProvider(LocalBringIntoViewSpec provides Still) {
         LazyColumn(
             Modifier.padding(top = 12.dp).fillMaxWidth().weight(1f).onFocusChanged { browsing = it.hasFocus },
             state = rowsState,
         ) {
-            item {
-                ShelfRow(0, rowsState, spec, str(R.string.row_tv), str(R.string.row_tv_sub), str(if (fresh.isEmpty()) R.string.row_recent else R.string.row_new)) {
-                    items(tv, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
-                }
-            }
-            if (fresh.isNotEmpty()) item {
-                ShelfRow(1, rowsState, spec, str(R.string.row_new), str(R.string.row_new_sub), str(R.string.row_recent)) {
-                    items(fresh, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
-                }
-            }
-            item {
-                ShelfRow(1 + shift, rowsState, spec, str(R.string.row_recent), str(R.string.row_recent_sub), str(R.string.row_starred)) {
-                    items(recent, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { Fmt.shortDate(a.date) }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
-                }
-            }
-            item {
-                ShelfRow(2 + shift, rowsState, spec, str(R.string.row_starred), null, str(R.string.row_categories)) {
-                    items(starred, key = { it.id }) { a -> Tile(a, meta(a).ifEmpty { "★ ${Fmt.stars(a.stars)}" }, meta(a).isNotEmpty(), { onWall(a.id) }) { openApp(a.id) } }
-                }
-            }
-            item {
-                ShelfRow(3 + shift, rowsState, spec, str(R.string.row_categories), str(R.string.row_categories_sub), null) {
-                    items(rooms, key = { it.first }) { (room, apps) -> RoomCard(room, apps.size) { openRoom(room) } }
-                }
+            shelves.forEachIndexed { i, shelf ->
+                item { ShelfRow(i, rowsState, spec, shelf.title, shelf.sub, shelves.getOrNull(i + 1)?.title, shelf.content) }
             }
         }
+        }
+        pack?.let { p -> PackDialog(p, openApp) { pack = null } }
+    }
+}
+
+private class Shelf(val title: String, val sub: String?, val content: androidx.compose.foundation.lazy.LazyListScope.() -> Unit)
+
+@Composable
+private fun PackCard(pack: Pack, onClick: () -> Unit) {
+    val apps = remember(pack.id, Catalog.apps) { pack.apps }
+    Focusable(onClick) { f ->
+        Column(
+            Modifier.size(230.dp, 83.dp).lift(f, ring = 10.dp).clip(RoundedCornerShape(10.dp)).background(C.Mat)
+                .padding(horizontal = 14.dp, vertical = 11.dp),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                apps.take(5).forEach { a -> AppIcon(a, 24.dp) }
+            }
+            Spacer(Modifier.weight(1f))
+            T(packName(pack), 16.sp, weight = FontWeight.SemiBold, tight = true, maxLines = 1)
+            T(plural(R.plurals.apps, apps.size, apps.size), 11.5.sp, color = C.Stone)
+        }
+    }
+}
+
+private fun packName(p: Pack): String = when (p.id) {
+    "new_tv" -> str(R.string.pack_new_tv)
+    "media" -> str(R.string.pack_media)
+    "games" -> str(R.string.pack_games)
+    "tools" -> str(R.string.pack_tools)
+    else -> p.title
+}
+
+@Composable
+private fun PackDialog(pack: Pack, openApp: (String) -> Unit, onClose: () -> Unit) {
+    AppListDialog(packName(pack), str(R.string.pack_body), pack.apps, openApp, onClose)
+}
+
+@Composable
+fun AppListDialog(title: String, body: String, apps: List<App>, openApp: (String) -> Unit, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val tick = Device.tick
+    val first = remember { FocusRequester() }
+    val missing = remember(apps, tick) { apps.filter { Device.installedAs(ctx, it) == null && it.runsHere } }
+    val size = missing.sumOf { pickApk(it).size }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.width(640.dp).heightIn(max = 600.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(title, 22.sp, weight = FontWeight.SemiBold, tight = true)
+            T(body, 14.sp, Modifier.padding(top = 6.dp), color = C.Ink2)
+            Column(Modifier.padding(top = 12.dp).weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                apps.forEach { a ->
+                    val installed = remember(a.id, tick) { Device.installedAs(ctx, a) != null }
+                    val job = Installer.jobs[a.id]
+                    AppRow(
+                        focusRequester = null,
+                        onClick = { onClose(); openApp(a.id) },
+                        icon = { AppIcon(a, 34.dp) },
+                        title = a.name,
+                        sub = a.note,
+                    ) { f ->
+                        val label = when {
+                            job is Job.Downloading -> str(R.string.job_downloading, (job.fraction * 100).toInt())
+                            job == Job.Checking || job == Job.Installing -> str(R.string.job_installing)
+                            job is Job.Failed -> str(R.string.pack_failed)
+                            installed -> str(R.string.status_installed)
+                            !a.runsHere -> str(R.string.unsupported_short)
+                            else -> Fmt.mb(pickApk(a).size)
+                        }
+                        T("  $label", 12.5.sp, color = C.Stone, maxLines = 1)
+                        MiniPill(str(R.string.details), f)
+                    }
+                }
+            }
+            Row(Modifier.padding(top = 18.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Pill(str(R.string.action_close), onClose)
+                if (missing.isNotEmpty()) {
+                    Spacer(Modifier.width(10.dp))
+                    Pill(str(R.string.pack_install, missing.size, Fmt.mb(size)), { missing.forEach { Installer.start(ctx, it) } },
+                        solid = true, icon = Icons.Download, requester = first)
+                }
+            }
+            LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
         }
     }
 }
@@ -509,7 +609,7 @@ private fun NameCard(app: App) {
 }
 
 @Composable
-private fun AppIcon(app: App, size: Dp, modifier: Modifier = Modifier) {
+fun AppIcon(app: App, size: Dp, modifier: Modifier = Modifier) {
     val url = app.art.icon
     var bmp by remember(url) { mutableStateOf(url?.let { Images.cached(it, 192) }) }
     LaunchedEffect(url) { if (bmp == null && url != null) bmp = Images.load(url, 192) }
@@ -649,8 +749,8 @@ private fun MiniArt(a: App) {
 private fun RoomPage(
     room: String,
     grid: LazyGridState,
-    recent: Boolean,
-    onRecent: (Boolean) -> Unit,
+    sort: Int,
+    onSort: (Int) -> Unit,
     last: String?,
     onFocusApp: (String) -> Unit,
     openApp: (String) -> Unit,
@@ -658,8 +758,14 @@ private fun RoomPage(
 ) {
     val ctx = LocalContext.current
     val tick = Device.tick
-    val apps = remember(room, recent, Prefs.hideStreams) {
-        Catalog.visible.filter { it.room == room }.let { list -> if (recent) list.sortedByDescending { it.date } else list }
+    val apps = remember(room, sort, Prefs.hideStreams) {
+        Catalog.visible.filter { it.room == room }.let { list ->
+            when (sort) {
+                1 -> list.sortedByDescending { it.date }
+                2 -> list.sortedByDescending { it.downloads }
+                else -> list
+            }
+        }
     }
     val target = last?.takeIf { l -> apps.any { it.id == l } } ?: apps.firstOrNull()?.id
     @Suppress("UNUSED_VARIABLE") val watch = tick
@@ -679,15 +785,16 @@ private fun RoomPage(
                 }
                 Spacer(Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Chip(str(R.string.row_starred), !recent) { onRecent(false) }
-                    Chip(str(R.string.row_recent), recent) { onRecent(true) }
+                    Chip(str(R.string.row_starred), sort == 0) { onSort(0) }
+                    Chip(str(R.string.row_recent), sort == 1) { onSort(1) }
+                    Chip(str(R.string.row_downloads), sort == 2) { onSort(2) }
                 }
             }
         }
         items(apps, key = { it.id }) { a ->
             val s = status(ctx, a)
             Tile(
-                a, s.ifEmpty { if (recent) Fmt.shortDate(a.date) else "★ ${Fmt.stars(a.stars)}" }, s.isNotEmpty(),
+                a, s.ifEmpty { when (sort) { 1 -> Fmt.shortDate(a.date); 2 -> Fmt.downloads(a.downloads); else -> "★ ${Fmt.stars(a.stars)}" } }, s.isNotEmpty(),
                 onFocus = { onFocusApp(a.id) },
                 requester = if (a.id == target) handoff.target else null,
             ) { openApp(a.id) }
@@ -720,8 +827,9 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
     var older by remember(app.id) { mutableStateOf<Release?>(null) }
     var showNotes by remember(app.id) { mutableStateOf(false) }
     var showPermissions by remember(app.id) { mutableStateOf(false) }
+    var showHelp by remember { mutableStateOf(false) }
     val permissions = remember(app.id, installed) {
-        if (installed != null) Device.permissions(ctx, app.pkg) else emptyList()
+        if (installed != null) Device.permissions(ctx, app.pkg) else app.perms
     }
     val knownPermissions = remember(permissions) { permissions.mapNotNull(::permissionLabel) }
     Row(Modifier.fillMaxSize().padding(horizontal = 48.dp)) {
@@ -780,16 +888,19 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                         app.basedOn != null -> str(R.string.by_maker_based, app.maker, Catalog.byRepo(app.basedOn)?.name ?: app.basedOn.substringAfter('/'))
                         else -> str(R.string.by_maker, app.maker)
                     }
-                    T(byLine, 12.5.sp, color = C.Stone, maxLines = 1)
+                    T(listOfNotNull(byLine, app.code?.let { str(R.string.code_short, it.toString()) }).joinToString(" · "), 12.5.sp, color = C.Stone, maxLines = 1)
                 }
             }
             T(app.note, 15.5.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 2)
+            val stale = remember(app.id) { runCatching { java.time.LocalDate.parse(app.date).isBefore(java.time.LocalDate.now().minusYears(1)) }.getOrDefault(false) }
             if (app.archived) T(str(R.string.archived_note), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+            else if (stale) T(str(R.string.stale_note, Fmt.monthYear(app.date)), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             Row(Modifier.padding(top = 10.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 InstallButton(app, requester = handoff.target)
                 if (installed != null && !Installer.busy(app.id)) Pill(if (installed.versionCode < app.versionCode) "" else str(R.string.uninstall), { uninstall(ctx, app.pkg) }, icon = Icons.Trash)
+                if ((Installer.jobs[app.id] as? Job.Failed)?.message?.let(Help::applies) == true) Pill(str(R.string.help_action), { showHelp = true }, icon = Icons.Help)
             }
-            JobNote(app, Modifier.padding(top = 6.dp))
+            JobNote(app, Modifier.padding(top = 6.dp), helpButton = false)
             StorageLine(app, installed)
             val fork = remember(app.id) { Catalog.forksOf(app).maxByOrNull { it.date } }
             if (fork != null) ForkLine(fork) { openApp(fork.id) }
@@ -801,7 +912,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
                 }
                 Row {
                     Prov(Icons.Scale, str(R.string.fact_licence), app.licence ?: str(R.string.licence_unknown), Modifier.weight(1f))
-                    Prov(Icons.Box, str(R.string.prov_download), Fmt.mb(apk.size), Modifier.weight(1f))
+                    Prov(Icons.Box, str(R.string.prov_download), if (app.downloads > 0) "${Fmt.mb(apk.size)} · ${L.wrap(Fmt.downloads(app.downloads))}" else Fmt.mb(apk.size), Modifier.weight(1f))
                 }
                 val cert = app.certSha256
                 val mismatch = installed != null && cert != null && installed.certs.isNotEmpty() && cert !in installed.certs
@@ -829,6 +940,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
     older?.let { r -> OlderDialog(app, r, installed) { older = null } }
     notes?.takeIf { showNotes }?.let { InfoDialog(str(R.string.whats_new, app.version), it) { showNotes = false } }
     if (showPermissions) PermissionsDialog(knownPermissions, permissions.size - knownPermissions.size) { showPermissions = false }
+    if (showHelp) HelpDialog { showHelp = false }
 }
 
 @Composable
@@ -1098,6 +1210,7 @@ private fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
 
 private fun search(q: String): List<Pair<App, Boolean>> {
     if (q.isEmpty()) return emptyList()
+    if (q.matches(Regex("(\\d{5}[\\s,.]*)+"))) return Regex("\\d{5}").findAll(q).mapNotNull { Catalog.byCode(it.value) }.distinct().map { it to true }.toList()
     val words = q.split(Regex("\\s+")).filter { it.isNotEmpty() }
     return Catalog.apps.filter { Catalog.shown(it) }.mapNotNull { a ->
         val hay = "${a.name} ${a.note} ${a.desc} ${a.room} ${a.repo}".lowercase()
@@ -1198,6 +1311,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
     var others by remember { mutableStateOf<List<LocalApp>?>(null) }
     LaunchedEffect(tick, mine) { others = withContext(Dispatchers.IO) { otherApps(ctx, mine.map { it.first.pkg }.toSet()) } }
     var linking by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var digest by remember { mutableStateOf<List<App>?>(null) }
     fun state(a: App, i: Installed): State = when {
         Installer.busy(a.id) -> State.Busy
         Installer.jobs[a.id] is Job.Held || (a.certSha256 != null && i.certs.isNotEmpty() && a.certSha256 !in i.certs) -> State.Held
@@ -1223,6 +1337,11 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
                 AppSort.Default -> str(R.string.sort_default)
                 AppSort.Name -> str(R.string.sort_name)
                 AppSort.Date -> str(R.string.sort_date)
+            }
+            val week = remember(mine) { mine.map { it.first }.filter { a -> runCatching { !java.time.LocalDate.parse(a.date).isBefore(java.time.LocalDate.now().minusDays(7)) }.getOrDefault(false) } }
+            if (week.isNotEmpty()) {
+                Pill(str(R.string.digest_action, week.size), { digest = week })
+                Spacer(Modifier.width(12.dp))
             }
             Pill(sortText, { Prefs.nextAppSort() })
             if (updatable.isNotEmpty()) {
@@ -1297,6 +1416,7 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
             }
         }
     }
+    digest?.let { DigestDialog(it, openApp) { digest = null } }
     linking?.let { (pkg, label) ->
         LinkDialog(
             pkg = pkg,
@@ -1304,6 +1424,45 @@ private fun MyApps(openApp: (String) -> Unit, goDiscover: () -> Unit, handoff: F
             onDismiss = { linking = null },
             onLinked = { linking = null },
         )
+    }
+}
+
+@Composable
+private fun DigestDialog(apps: List<App>, openApp: (String) -> Unit, onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    val notes = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
+    LaunchedEffect(apps) {
+        apps.forEach { a -> GitHub.release(a.repo, a.version)?.notes?.takeIf { it.isNotBlank() }?.let { notes[a.id] = it } }
+    }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.width(680.dp).heightIn(max = 600.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.digest_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            Column(Modifier.padding(top = 12.dp).weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                apps.sortedByDescending { it.date }.forEach { a ->
+                    Focusable({ onClose(); openApp(a.id) }) { f ->
+                        Row(
+                            Modifier.fillMaxWidth().lift(f, 1.01f, RoundedCornerShape(12.dp), rest = 0.dp, ring = 12.dp)
+                                .background(if (f) C.WallDeep else Color.Transparent, RoundedCornerShape(12.dp)).padding(12.dp),
+                        ) {
+                            AppIcon(a, 34.dp)
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                T("${a.name}  ${L.wrap(a.version)}", 15.sp, weight = FontWeight.SemiBold, maxLines = 1)
+                                T(Fmt.date(a.date), 11.5.sp, color = C.Stone)
+                                T(notes[a.id] ?: str(R.string.digest_no_notes), 13.sp, Modifier.padding(top = 4.dp), color = C.Ink2, maxLines = 4)
+                            }
+                        }
+                    }
+                }
+            }
+            Row(Modifier.padding(top = 18.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
     }
 }
 
@@ -1372,7 +1531,7 @@ private fun Section(title: String) {
 }
 
 @Composable
-private fun AppRow(
+fun AppRow(
     focusRequester: FocusRequester?,
     onClick: () -> Unit,
     icon: @Composable () -> Unit,
@@ -1402,7 +1561,7 @@ private fun AppRow(
 }
 
 @Composable
-private fun MiniPill(text: String, focused: Boolean) {
+fun MiniPill(text: String, focused: Boolean) {
     Spacer(Modifier.width(14.dp))
     Box(
         Modifier.height(28.dp).background(if (focused) C.accent else Color.Transparent, CircleShape)
@@ -1426,7 +1585,7 @@ private fun ActionPill(text: String, onClick: () -> Unit) {
 private class Setting(val title: String, val value: String, val help: String, val action: (() -> Unit)? = null)
 
 @Composable
-private fun SettingsScreen(handoff: FocusHandoff) {
+private fun SettingsScreen(openApp: (String) -> Unit, handoff: FocusHandoff) {
     val ctx = LocalContext.current
     val tick = Device.tick
     var cacheTick by remember { mutableIntStateOf(0) }
@@ -1435,6 +1594,10 @@ private fun SettingsScreen(handoff: FocusHandoff) {
     val version = remember { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }
     var showDiscord by remember { mutableStateOf(false) }
     var showReport by remember { mutableStateOf(false) }
+    var showPin by remember { mutableStateOf(false) }
+    var showBackup by remember { mutableStateOf(false) }
+    var showRestore by remember { mutableStateOf(false) }
+    val backup = remember(tick) { backupApps(ctx) }
     val rows = listOf(
         Setting(str(R.string.set_accent), str(Prefs.accents[Prefs.accent].first),
             str(R.string.set_accent_help)) { Prefs.nextAccent() },
@@ -1450,6 +1613,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_apk_help, Build.SUPPORTED_ABIS.joinToString(", "))),
         Setting(str(R.string.set_key), str(R.string.set_key_value),
             str(R.string.set_key_help)),
+        Setting(str(R.string.set_pin), str(if (Lock.on) R.string.on else R.string.off),
+            str(R.string.set_pin_help)) { showPin = true },
         Setting(str(R.string.set_self_update), str(if (Prefs.autoCheckSelf) R.string.on else R.string.off),
             str(R.string.set_self_update_help)) { Prefs.toggleAutoCheck() },
         Setting(str(R.string.set_catalog), str(R.string.catalog_value, Fmt.count(Catalog.apps.size), Fmt.shortDate(Catalog.generated)),
@@ -1462,6 +1627,10 @@ private fun SettingsScreen(handoff: FocusHandoff) {
             str(R.string.set_cache_help)) {
             Device.clearCache(ctx); cacheTick++
         },
+        Setting(str(R.string.set_backup), plural(R.plurals.apps, backup.size, backup.size),
+            str(R.string.backup_help)) { showBackup = true },
+        Setting(str(R.string.set_restore), str(R.string.restore_value),
+            str(R.string.restore_help)) { showRestore = true },
         Setting(str(R.string.set_discord), str(R.string.discord_value),
             str(R.string.discord_help)) { showDiscord = true },
         Setting(str(R.string.set_report), Device.model,
@@ -1500,12 +1669,149 @@ private fun SettingsScreen(handoff: FocusHandoff) {
                         if (s.action != null) Ico(Icons.ChevRight, 13.dp, if (f) C.accent else C.Stone, Modifier.padding(start = 6.dp))
                     }
                 }
-                if (i == 6 || i == 9) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
+                if (i == 7 || i == 10) Box(Modifier.padding(horizontal = 15.dp, vertical = 4.dp).fillMaxWidth().height(1.dp).background(C.Hair))
             }
         }
     }
     if (showDiscord) DiscordDialog { showDiscord = false }
     if (showReport) ReportDialog { showReport = false }
+    if (showPin) PinSetup { showPin = false }
+    if (showBackup) BackupDialog(backup) { showBackup = false }
+    if (showRestore) RestoreDialog(openApp) { showRestore = false }
+}
+
+private fun backupApps(ctx: Context): List<App> =
+    shelfApps(ctx).map { it.first }.filter { it.code != null && it.id != "openshelf" }.sortedBy { it.name.lowercase() }
+
+@Composable
+private fun BackupDialog(apps: List<App>, onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    val codes = apps.mapNotNull { it.code }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Row(
+            Modifier.width(760.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                T(str(R.string.backup_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+                if (codes.isEmpty()) {
+                    T(str(R.string.backup_empty), 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+                } else {
+                    T(str(R.string.backup_body), 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+                    T(codes.joinToString("  "), 20.sp, Modifier.padding(top = 14.dp), weight = FontWeight.SemiBold, maxLines = 6)
+                    T(apps.joinToString(", ") { it.name }, 12.5.sp, Modifier.padding(top = 10.dp), color = C.Stone, maxLines = 3)
+                }
+                Row(Modifier.padding(top = 22.dp)) {
+                    Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+                }
+            }
+            if (codes.isNotEmpty()) {
+                Spacer(Modifier.width(24.dp))
+                Qr("https://wingedpanther.github.io/openshelf/#restore=" + codes.joinToString("."), 220.dp)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
+}
+
+@Composable
+private fun RestoreDialog(openApp: (String) -> Unit, onClose: () -> Unit) {
+    var input by remember { mutableStateOf("") }
+    var found by remember { mutableStateOf<List<App>?>(null) }
+    val field = remember { FocusRequester() }
+    val list = found
+    if (list != null) {
+        AppListDialog(str(R.string.restore_title), plural(R.plurals.restore_found, list.size, list.size), list, openApp, onClose)
+        return
+    }
+    Dialog(onDismissRequest = onClose) {
+        Column(
+            Modifier.width(520.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            T(str(R.string.restore_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+            T(str(R.string.restore_body), 14.sp, Modifier.padding(top = 6.dp), color = C.Ink2)
+            Box(
+                Modifier.padding(top = 16.dp).fillMaxWidth().height(50.dp)
+                    .clip(RoundedCornerShape(12.dp)).background(C.WallDeep)
+                    .border(1.dp, C.Hair2, RoundedCornerShape(12.dp)).padding(horizontal = 14.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                BasicTextField(
+                    value = input,
+                    onValueChange = { input = it.filter { c -> c.isDigit() || c == ' ' } },
+                    singleLine = true,
+                    textStyle = TextStyle(fontFamily = Geist, fontSize = 18.sp, color = C.Ink),
+                    cursorBrush = SolidColor(C.accent),
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().focusRequester(field),
+                )
+                if (input.isEmpty()) T("48213 99120", 18.sp, color = C.Stone2)
+            }
+            val codes = Regex("\\d{5}").findAll(input).map { it.value }.toList()
+            Row(Modifier.padding(top = 20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                Pill(str(R.string.action_cancel), onClose)
+                Spacer(Modifier.width(10.dp))
+                Pill(str(R.string.restore_show, codes.size), { found = codes.mapNotNull { Catalog.byCode(it) }.distinct() }, solid = true)
+            }
+            LaunchedEffect(Unit) { runCatching { field.requestFocus() } }
+        }
+    }
+}
+
+@Composable
+private fun PinSetup(onDone: () -> Unit) {
+    val ctx = LocalContext.current
+    if (Lock.on) {
+        PinDialog(str(R.string.pin_turn_off), onClose = onDone) { Lock.clearPin(ctx); onDone() }
+        return
+    }
+    var first by remember { mutableStateOf<String?>(null) }
+    PinDialog(
+        str(if (first == null) R.string.pin_new else R.string.pin_again),
+        onEntered = { pin ->
+            when (val f = first) {
+                null -> { first = pin; null }
+                pin -> { Lock.setPin(ctx, pin); onDone(); null }
+                else -> { first = null; str(R.string.pin_mismatch) }
+            }
+        },
+        onClose = onDone,
+    ) {}
+}
+
+@Composable
+fun HelpDialog(onClose: () -> Unit) {
+    val closeRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Row(
+            Modifier.width(760.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                T(str(R.string.help_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+                Column(Modifier.padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    listOf(R.string.help_step1, R.string.help_step2, R.string.help_step3).forEachIndexed { i, step ->
+                        Row {
+                            T("${i + 1}", 14.sp, Modifier.width(20.dp), color = C.accent, weight = FontWeight.SemiBold)
+                            T(str(step), 14.sp, color = C.Ink2)
+                        }
+                    }
+                    if (Help.brand == "amazon") T(str(R.string.help_fire), 14.sp, color = C.Ink2)
+                    if (Help.operator) T(str(R.string.help_operator), 14.sp, color = C.Ink2)
+                }
+                Row(Modifier.padding(top = 22.dp)) {
+                    Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+                }
+            }
+            Spacer(Modifier.width(24.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Qr(Help.url, 200.dp)
+                T(str(R.string.help_more), 12.sp, Modifier.padding(top = 8.dp).width(200.dp), color = C.Stone)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
 }
 
 @Composable
