@@ -8,6 +8,8 @@ To install it, open the [Downloader](https://www.aftvnews.com/downloader/) app o
 
 Questions, app suggestions and release news: [join the Discord](https://discord.gg/DA9tEsHQHf). Bugs go to [GitHub issues](https://github.com/wingedpanther/openshelf/issues).
 
+If Open Shelf made your TV nicer to use, you can [buy me a coffee](https://buymeacoffee.com/wingedpanther).
+
 ![Open Shelf on Android TV](docs/demo.gif)
 
 [Watch the full-quality video](docs/demo.mp4)
