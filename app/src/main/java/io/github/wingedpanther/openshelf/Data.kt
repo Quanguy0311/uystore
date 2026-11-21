@@ -64,7 +64,7 @@ data class App(
     val added: String? = null,
     val basedOn: String? = null,
 ) {
-    val runsHere: Boolean get() = (minSdk ?: 0) <= Build.VERSION.SDK_INT
+    val runsHere: Boolean get() = unsupported(this) == null
 }
 
 object Catalog {
@@ -79,7 +79,7 @@ object Catalog {
             val root = JSONObject(ctx.assets.open("catalog.json").bufferedReader().use { it.readText() })
             generated = root.getString("generated")
             val list = root.getJSONArray("apps")
-            (0 until list.length()).map { parse(list.getJSONObject(it)) }
+            (0 until list.length()).map { parse(list.getJSONObject(it)) }.filter { it.apks.isNotEmpty() }
         }
         apps = parsed
     }
@@ -101,7 +101,7 @@ object Catalog {
             version = o.getString("version"), date = o.getString("date"),
             certSha256 = o.str("certSha256"),
             art = AppArt(art.str("banner"), art.str("feature"), art.str("icon"), shots),
-            apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi"), it.getString("url"), it.getLong("size")) },
+            apks = o.getJSONArray("apks").objects().map { Apk(it.getString("name"), it.getString("abi").let { a -> if (a == "any") abiOf(it.getString("name")) else a }, it.getString("url"), it.getLong("size")) },
             releases = o.getJSONArray("releases").objects().map { Release(it.getString("tag"), it.getString("date")) },
             forkOf = o.str("forkOf"), parentStars = o.optInt("parentStars"), added = o.str("added"), basedOn = o.str("basedOn"),
         )
@@ -288,17 +288,6 @@ object GitHub {
         }
     }
 
-    private fun abiOf(name: String): String {
-        val n = name.lowercase()
-        listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86").firstOrNull { it in n }?.let { return it }
-        return when {
-            "arm64" in n || "aarch64" in n -> "arm64-v8a"
-            "armv7" in n || "arm32" in n -> "armeabi-v7a"
-            "universal" in n -> "universal"
-            else -> "any"
-        }
-    }
-
     private fun plain(md: String): String {
         val lines = md.replace("\r", "").lineSequence().map { it.trim() }
             .filterNot { it.startsWith("<!--") || it.startsWith("![") || it.matches(Regex("^([-*_])\\1{2,}$")) || "Full Changelog" in it }
@@ -316,6 +305,28 @@ object GitHub {
         for (l in lines) if (l.isNotEmpty() || (out.isNotEmpty() && out.last().isNotEmpty())) out.add(l)
         return out.joinToString("\n").trim()
     }
+}
+
+fun abiOf(name: String): String {
+    val n = name.lowercase()
+    listOf("arm64-v8a", "armeabi-v7a", "x86_64").firstOrNull { it in n }?.let { return it }
+    return when {
+        "arm64" in n || "aarch64" in n -> "arm64-v8a"
+        "armv7" in n || "arm32" in n -> "armeabi-v7a"
+        Regex("(^|[-_.])(x64|x86-64|amd64)([-_.]|$)").containsMatchIn(n) -> "x86_64"
+        "x86" in n -> "x86"
+        "universal" in n -> "universal"
+        else -> "any"
+    }
+}
+
+fun unsupported(app: App): String? {
+    val sdk = app.minSdk ?: 0
+    if (sdk > Build.VERSION.SDK_INT) return str(R.string.unsupported_android, app.name, androidName(sdk), androidName(Build.VERSION.SDK_INT))
+    if (app.apks.isNotEmpty() && app.apks.none { it.abi in Build.SUPPORTED_ABIS || it.abi == "any" || it.abi == "universal" }) {
+        return str(R.string.unsupported_cpu, app.name, app.apks.map { abiLabel(it.abi) }.distinct().joinToString(", "), abiLabel(Build.SUPPORTED_ABIS.first()))
+    }
+    return null
 }
 
 fun pickApk(app: App): Apk {
@@ -505,6 +516,17 @@ object Device {
     }.getOrElse { emptyList() }
 
     private fun sha256(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b).joinToString("") { "%02x".format(it) }
+
+    val model: String get() = if (Build.MODEL.startsWith(Build.MANUFACTURER, true)) Build.MODEL else "${Build.MANUFACTURER.replaceFirstChar { it.titlecase() }} ${Build.MODEL}"
+    val android: String get() = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+    val cpu: String get() = Build.SUPPORTED_ABIS.joinToString(", ")
+
+    fun ownVersion(ctx: Context): String = ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName.orEmpty()
+
+    fun reportUrl(ctx: Context): String {
+        fun q(s: String) = java.net.URLEncoder.encode(s, "UTF-8")
+        return "https://github.com/wingedpanther/openshelf/issues/new?template=bug.yml&tv=${q(model)}&android=${q(android)}&cpu=${q(cpu)}&version=${q(ownVersion(ctx))}"
+    }
 
     fun freeBytes(ctx: Context): Long = StatFs(ctx.filesDir.path).availableBytes
     fun totalBytes(ctx: Context): Long = StatFs(ctx.filesDir.path).totalBytes

@@ -152,6 +152,7 @@ object Icons {
     val Scale = icon("M12 4v16M7 20h10M5 7h14M5 7l-2.5 6a3 3 0 0 0 5 0zM19 7l-2.5 6a3 3 0 0 0 5 0z")
     val Box = icon("M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z", "M3.5 7.5L12 12l8.5-4.5M12 12v9")
     val Trash = icon("M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13")
+    val Mic = icon("M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z", "M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7")
     val Link = icon("M14 4h6v6M20 4l-9 9", "M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10")
 }
 
@@ -264,6 +265,21 @@ fun Ring(fraction: Float, color: Color, track: Color, size: Dp = 20.dp) {
 }
 
 @Composable
+fun Qr(text: String, size: Dp, modifier: Modifier = Modifier) {
+    val matrix = remember(text) {
+        com.google.zxing.qrcode.QRCodeWriter().encode(text, com.google.zxing.BarcodeFormat.QR_CODE, 0, 0, mapOf(com.google.zxing.EncodeHintType.MARGIN to 0))
+    }
+    Box(modifier.size(size).clip(RoundedCornerShape(12.dp)).background(Color.White).padding(12.dp)) {
+        Canvas(Modifier.size(size - 24.dp)) {
+            val cell = this.size.width / matrix.width
+            for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
+                if (matrix[x, y]) drawRect(Color.Black, Offset(x * cell, y * cell), androidx.compose.ui.geometry.Size(cell + 0.5f, cell + 0.5f))
+            }
+        }
+    }
+}
+
+@Composable
 fun Dot(size: Dp = 7.dp) {
     Box(Modifier.size(size).background(C.accent, CircleShape))
 }
@@ -305,8 +321,11 @@ fun InstallButton(app: App, modifier: Modifier = Modifier, solid: Boolean = true
         Job.Installing -> 0.85f
         else -> null
     }
-    if (installed == null && !app.runsHere) {
-        Pill(str(R.string.needs_android, androidName(app.minSdk ?: 0)), {}, modifier, solid, null, requester)
+    val why = remember(app.id) { unsupported(app) }
+    var explain by remember(app.id) { mutableStateOf(false) }
+    if (installed == null && why != null) {
+        Pill(str(R.string.action_install_size, size), { explain = true }, modifier, solid, Icons.Download, requester)
+        if (explain) InfoDialog(str(R.string.unsupported_title), why, 480.dp) { explain = false }
         return
     }
     val (text, icon) = when {

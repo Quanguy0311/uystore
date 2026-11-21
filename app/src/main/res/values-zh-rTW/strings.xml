@@ -44,7 +44,6 @@
     <string name="room_tools">工具</string>
     <string name="room_other">其他</string>
 
-    <string name="needs_android">需要 %1$s</string>
     <string name="job_downloading">正在下載 %1$d%%</string>
     <string name="job_checking">正在檢查簽章</string>
     <string name="job_installing">正在安裝</string>
@@ -232,4 +231,16 @@
     <string name="link_title">連結 GitHub 儲存庫</string>
     <string name="link_unlink">解除連結</string>
     <string name="link_working">正在驗證…</string>
+    <string name="unsupported_title">無法在這台電視上安裝</string>
+    <string name="unsupported_android">%1$s 需要 %2$s 或更新版本。這台電視是 %3$s。</string>
+    <string name="unsupported_cpu">%1$s 只有適用於 %2$s 的版本。這台電視的處理器是 %3$s。</string>
+    <string name="err_install_timeout">Android 沒有回應，Open Shelf 已停止等待。有些電視會阻擋應用程式發起的安裝。請再試一次，或用電腦透過 adb 安裝 APK。</string>
+    <string name="set_report">回報問題</string>
+    <string name="report_help">顯示一個 QR 碼，用手機掃描。它會開啟新的 GitHub issue，電視型號、Android 版本和 Open Shelf 版本都已填好。</string>
+    <string name="report_title">回報問題</string>
+    <string name="report_body">用手機相機掃描 QR 碼。它會開啟填好這些資訊的 GitHub issue，然後寫下發生了什麼問題。</string>
+    <string name="report_tv">電視</string>
+    <string name="report_cpu">處理器</string>
+    <string name="voice_prompt">說出應用程式名稱或用途</string>
+    <string name="voice_action">語音</string>
 </resources>

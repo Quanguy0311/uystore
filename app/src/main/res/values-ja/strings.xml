@@ -44,7 +44,6 @@
     <string name="room_tools">ツール</string>
     <string name="room_other">その他</string>
 
-    <string name="needs_android">%1$sが必要</string>
     <string name="job_downloading">ダウンロード中 %1$d%%</string>
     <string name="job_checking">署名を確認中</string>
     <string name="job_installing">インストール中</string>
@@ -232,4 +231,16 @@
     <string name="link_title">GitHubリポジトリをリンク</string>
     <string name="link_unlink">リンク解除</string>
     <string name="link_working">検証中…</string>
+    <string name="unsupported_title">このテレビにはインストールできません</string>
+    <string name="unsupported_android">%1$sには%2$s以降が必要です。このテレビは%3$sです。</string>
+    <string name="unsupported_cpu">%1$sは%2$s向けのビルドしかありません。このテレビのプロセッサーは%3$sです。</string>
+    <string name="err_install_timeout">Androidから応答がなかったため、Open Shelfは待機をやめました。アプリからのインストールをブロックするテレビもあります。もう一度試すか、パソコンからadbでAPKをインストールしてください。</string>
+    <string name="set_report">問題を報告</string>
+    <string name="report_help">スマホで読み取るコードを表示します。テレビの機種、Androidのバージョン、Open Shelfのバージョンが入力済みのGitHub issueが開きます。</string>
+    <string name="report_title">問題を報告</string>
+    <string name="report_body">スマホのカメラでコードを読み取ってください。これらの情報が入ったGitHub issueが開きます。あとは何が起きたかを書いてください。</string>
+    <string name="report_tv">テレビ</string>
+    <string name="report_cpu">プロセッサー</string>
+    <string name="voice_prompt">アプリ名か用途を話してください</string>
+    <string name="voice_action">音声</string>
 </resources>

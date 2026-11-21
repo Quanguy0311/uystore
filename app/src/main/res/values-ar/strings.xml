@@ -44,7 +44,6 @@
     <string name="room_tools">الأدوات</string>
     <string name="room_other">أخرى</string>
 
-    <string name="needs_android">يتطلب %1$s</string>
     <string name="job_downloading">جارٍ التنزيل %1$d%%</string>
     <string name="job_checking">جارٍ التحقق من التوقيع</string>
     <string name="job_installing">جارٍ التثبيت</string>
@@ -258,4 +257,16 @@
     <string name="link_title">ربط مستودع على GitHub</string>
     <string name="link_unlink">إلغاء الربط</string>
     <string name="link_working">جارٍ التحقّق…</string>
+    <string name="unsupported_title">لا يمكن التثبيت على هذا التلفاز</string>
+    <string name="unsupported_android">يتطلب %1$s إصدار %2$s أو أحدث. هذا التلفاز يعمل بإصدار %3$s.</string>
+    <string name="unsupported_cpu">لا يتوفر %1$s إلا لمعالجات %2$s. معالج هذا التلفاز %3$s.</string>
+    <string name="err_install_timeout">لم يستجب أندرويد، لذلك توقف Open Shelf عن الانتظار. بعض أجهزة التلفاز تمنع التثبيت الذي تبدأه التطبيقات. حاول مرة أخرى، أو ثبّت ملف APK من الكمبيوتر باستخدام adb.</string>
+    <string name="set_report">الإبلاغ عن مشكلة</string>
+    <string name="report_help">يعرض رمزًا تمسحه بهاتفك. يفتح بلاغًا جديدًا على GitHub وفيه طراز التلفاز وإصدار أندرويد وإصدار Open Shelf مكتوبة مسبقًا.</string>
+    <string name="report_title">الإبلاغ عن مشكلة</string>
+    <string name="report_body">امسح الرمز بكاميرا هاتفك. سيفتح بلاغًا جديدًا على GitHub بهذه التفاصيل. ثم صف ما حدث.</string>
+    <string name="report_tv">التلفاز</string>
+    <string name="report_cpu">المعالج</string>
+    <string name="voice_prompt">قل اسم تطبيق أو ما يفعله</string>
+    <string name="voice_action">بالصوت</string>
 </resources>

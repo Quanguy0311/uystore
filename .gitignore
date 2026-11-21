@@ -10,3 +10,4 @@ keystore.properties
 .idea/
 *.iml
 tools/
+/dist

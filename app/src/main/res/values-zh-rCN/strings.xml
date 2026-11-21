@@ -44,7 +44,6 @@
     <string name="room_tools">工具</string>
     <string name="room_other">其他</string>
 
-    <string name="needs_android">需要 %1$s</string>
     <string name="job_downloading">正在下载 %1$d%%</string>
     <string name="job_checking">正在检查签名</string>
     <string name="job_installing">正在安装</string>
@@ -232,4 +231,16 @@
     <string name="link_title">链接 GitHub 仓库</string>
     <string name="link_unlink">解除链接</string>
     <string name="link_working">正在验证…</string>
+    <string name="unsupported_title">无法在这台电视上安装</string>
+    <string name="unsupported_android">%1$s 需要 %2$s 或更高版本。这台电视是 %3$s。</string>
+    <string name="unsupported_cpu">%1$s 只有适用于 %2$s 的版本。这台电视的处理器是 %3$s。</string>
+    <string name="err_install_timeout">Android 没有响应，Open Shelf 已停止等待。有些电视会阻止应用发起的安装。请重试，或用电脑通过 adb 安装 APK。</string>
+    <string name="set_report">报告问题</string>
+    <string name="report_help">显示一个二维码，用手机扫描。它会打开一个新的 GitHub issue，电视型号、Android 版本和 Open Shelf 版本已经填好。</string>
+    <string name="report_title">报告问题</string>
+    <string name="report_body">用手机相机扫描二维码。它会打开一个填好这些信息的 GitHub issue，然后写下出了什么问题。</string>
+    <string name="report_tv">电视</string>
+    <string name="report_cpu">处理器</string>
+    <string name="voice_prompt">说出应用名称或用途</string>
+    <string name="voice_action">语音</string>
 </resources>

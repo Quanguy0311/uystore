@@ -1,0 +1,16 @@
+name: Idea
+description: Something Open Shelf could do
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you'd like
+      description: What you want to do on the TV, and what gets in the way now.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Other apps that do it well, screenshots, or links.

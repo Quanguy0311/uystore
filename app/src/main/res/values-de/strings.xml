@@ -44,7 +44,6 @@
     <string name="room_tools">Tools</string>
     <string name="room_other">Sonstige</string>
 
-    <string name="needs_android">Benötigt %1$s</string>
     <string name="job_downloading">Lade herunter: %1$d%%</string>
     <string name="job_checking">Prüfe Signatur</string>
     <string name="job_installing">Installiere</string>
@@ -238,4 +237,16 @@
     <string name="link_title">GitHub-Repository verknüpfen</string>
     <string name="link_unlink">Verknüpfung aufheben</string>
     <string name="link_working">Wird geprüft…</string>
+    <string name="unsupported_title">Auf diesem Fernseher nicht installierbar</string>
+    <string name="unsupported_android">%1$s braucht %2$s oder neuer. Dieser Fernseher hat %3$s.</string>
+    <string name="unsupported_cpu">%1$s gibt es nur für %2$s. Dieser Fernseher hat einen %3$s-Prozessor.</string>
+    <string name="err_install_timeout">Android hat nicht geantwortet, deshalb wartet Open Shelf nicht mehr. Manche Fernseher blockieren Installationen, die eine App startet. Versuche es noch einmal oder installiere die APK per adb vom Computer.</string>
+    <string name="set_report">Problem melden</string>
+    <string name="report_help">Zeigt einen Code zum Scannen mit dem Handy. Er öffnet ein neues GitHub-Issue, in dem Modell, Android-Version und Open-Shelf-Version schon eingetragen sind.</string>
+    <string name="report_title">Problem melden</string>
+    <string name="report_body">Scanne den Code mit der Handykamera. Er öffnet ein neues GitHub-Issue mit diesen Angaben. Beschreibe dann, was schiefgelaufen ist.</string>
+    <string name="report_tv">Fernseher</string>
+    <string name="report_cpu">Prozessor</string>
+    <string name="voice_prompt">Sag einen App-Namen oder wofür sie ist</string>
+    <string name="voice_action">Sprache</string>
 </resources>

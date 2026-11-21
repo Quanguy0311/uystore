@@ -1,0 +1,20 @@
+name: Missing app
+description: A GitHub TV app that isn't in Open Shelf
+labels: [missing app]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open Shelf lists GitHub apps that have the Android TV launcher entry in their manifest, attach an APK to a GitHub release, and released something in the last 3 years.
+  - type: input
+    id: repo
+    attributes:
+      label: GitHub repository
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Where the APKs are published if it's a different repository, or anything unusual about the app.

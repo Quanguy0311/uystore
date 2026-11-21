@@ -44,7 +44,6 @@
     <string name="room_tools">Tools</string>
     <string name="room_other">Other</string>
 
-    <string name="needs_android">Needs %1$s</string>
     <string name="job_downloading">Downloading %1$d%%</string>
     <string name="job_checking">Checking signature</string>
     <string name="job_installing">Installing</string>
@@ -239,4 +238,16 @@
     <string name="link_title">Link a GitHub repository</string>
     <string name="link_unlink">Unlink</string>
     <string name="link_working">Verifying…</string>
+    <string name="unsupported_title">Can’t install on this TV</string>
+    <string name="unsupported_android">%1$s needs %2$s or newer. This TV runs %3$s.</string>
+    <string name="unsupported_cpu">%1$s only has builds for %2$s. This TV has a %3$s processor.</string>
+    <string name="err_install_timeout">Android didn’t answer, so Open Shelf stopped waiting. Some TVs block installs started by apps. Try again, or install the APK from a computer with adb.</string>
+    <string name="set_report">Report a problem</string>
+    <string name="report_help">Shows a code to scan with your phone. It opens a new GitHub issue with this TV’s model, Android version and Open Shelf version already filled in.</string>
+    <string name="report_title">Report a problem</string>
+    <string name="report_body">Scan the code with your phone’s camera. It opens a new GitHub issue with these details filled in. Then describe what went wrong.</string>
+    <string name="report_tv">TV</string>
+    <string name="report_cpu">Processor</string>
+    <string name="voice_prompt">Say an app name or what it does</string>
+    <string name="voice_action">Voice</string>
 </resources>

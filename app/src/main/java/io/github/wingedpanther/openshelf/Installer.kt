@@ -69,10 +69,19 @@ object Installer {
                     return@launch
                 }
                 jobs[app.id] = Job.Installing
-                try {
+                val session = try {
                     withContext(Dispatchers.IO) { commit(appCtx, app, file) }
                 } catch (e: Exception) {
                     if (!handOff(appCtx, app.id, file)) throw e
+                    null
+                }
+                if (session != null) {
+                    current[app.id] = session
+                    delay(INSTALL_TIMEOUT)
+                    if (current[app.id] == session && session !in answered && jobs[app.id] == Job.Installing) {
+                        runCatching { appCtx.packageManager.packageInstaller.abandonSession(session) }
+                        failed(app.id, str(R.string.err_install_timeout))
+                    }
                 }
             } catch (e: Exception) {
                 jobs[app.id] = Job.Failed(e.message ?: str(R.string.err_generic))
@@ -81,6 +90,13 @@ object Installer {
     }
 
     private const val MAX_TRIES = 3
+    private const val INSTALL_TIMEOUT = 90_000L
+    private val current = HashMap<String, Int>()
+    private val answered = HashSet<Int>()
+
+    fun answered(session: Int) {
+        answered.add(session)
+    }
 
     private class NonRetryable(msg: String) : IOException(msg)
 
@@ -165,7 +181,7 @@ object Installer {
         return null
     }
 
-    private fun commit(ctx: Context, app: App, file: File) {
+    private fun commit(ctx: Context, app: App, file: File): Int {
         val pi = ctx.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(app.pkg)
@@ -178,10 +194,11 @@ object Installer {
                 file.inputStream().use { it.copyTo(out) }
                 session.fsync(out)
             }
-            val intent = Intent(ctx, InstallResultReceiver::class.java).putExtra("appId", app.id).putExtra("apk", file.path)
+            val intent = Intent(ctx, InstallResultReceiver::class.java).putExtra("appId", app.id).putExtra("apk", file.path).putExtra("session", sessionId)
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
             session.commit(PendingIntent.getBroadcast(ctx, sessionId, intent, flags).intentSender)
         }
+        return sessionId
     }
 
     fun handOff(ctx: Context, id: String, file: File): Boolean = runCatching {
@@ -242,6 +259,7 @@ object Installer {
 class InstallResultReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val id = intent.getStringExtra("appId") ?: return
+        Installer.answered(intent.getIntExtra("session", -1))
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
         if (status != PackageInstaller.STATUS_PENDING_USER_ACTION) Installer.settled(ctx, id)
         when (status) {

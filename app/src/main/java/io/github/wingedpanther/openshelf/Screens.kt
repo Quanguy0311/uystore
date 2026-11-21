@@ -22,6 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -426,9 +428,9 @@ private val Still = object : BringIntoViewSpec {
 }
 
 @Composable
-private fun Fact(label: String, value: String) {
+private fun Fact(label: String, value: String, labelWidth: Dp = 64.dp) {
     Row {
-        T(label, 12.5.sp, Modifier.width(64.dp), color = C.Stone)
+        T(label, 12.5.sp, Modifier.width(labelWidth), color = C.Stone)
         T(value, 12.5.sp, weight = FontWeight.Medium, maxLines = 1)
     }
 }
@@ -825,16 +827,16 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
         }
     }
     older?.let { r -> OlderDialog(app, r, installed) { older = null } }
-    notes?.takeIf { showNotes }?.let { NotesDialog(str(R.string.whats_new, app.version), it) { showNotes = false } }
+    notes?.takeIf { showNotes }?.let { InfoDialog(str(R.string.whats_new, app.version), it) { showNotes = false } }
     if (showPermissions) PermissionsDialog(knownPermissions, permissions.size - knownPermissions.size) { showPermissions = false }
 }
 
 @Composable
-private fun NotesDialog(title: String, notes: String, onClose: () -> Unit) {
+fun InfoDialog(title: String, notes: String, width: Dp = 620.dp, onClose: () -> Unit) {
     val closeRequester = remember { FocusRequester() }
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
-            Modifier.width(620.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+            Modifier.width(width).shadow(16.dp, RoundedCornerShape(18.dp))
                 .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
         ) {
             T(title, 22.sp, weight = FontWeight.SemiBold, tight = true)
@@ -988,8 +990,19 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
     }
     val focus = LocalFocusManager.current
     val side = Modifier.padding(horizontal = 48.dp)
+    val ctx = LocalContext.current
+    val voice = remember {
+        android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, str(R.string.voice_prompt))
+            .takeIf { ctx.packageManager.queryIntentActivities(it, 0).isNotEmpty() }
+    }
+    val speech = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { r ->
+        r.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let { onQuery(it) }
+    }
     Column(Modifier.fillMaxSize()) {
-        Focusable(onClick = { editing = true }, modifier = side, requester = handoff.target) { f ->
+        Row(side, verticalAlignment = Alignment.CenterVertically) {
+        Focusable(onClick = { editing = true }, modifier = Modifier.weight(1f), requester = handoff.target) { f ->
             val active = f || editing
             Row(
                 Modifier.padding(top = 4.dp).fillMaxWidth().height(58.dp)
@@ -1035,6 +1048,11 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
                     }
                 }
             }
+        }
+        if (voice != null) {
+            Spacer(Modifier.width(10.dp))
+            Pill(str(R.string.voice_action), { runCatching { speech.launch(voice) } }, icon = Icons.Mic)
+        }
         }
         Row(side.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             T(str(R.string.search_try), 12.5.sp, Modifier.padding(end = 4.dp), color = C.Stone)
@@ -1416,6 +1434,7 @@ private fun SettingsScreen(handoff: FocusHandoff) {
     val cache = remember(cacheTick, tick) { Device.cacheBytes(ctx) }
     val version = remember { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }
     var showDiscord by remember { mutableStateOf(false) }
+    var showReport by remember { mutableStateOf(false) }
     val rows = listOf(
         Setting(str(R.string.set_accent), str(Prefs.accents[Prefs.accent].first),
             str(R.string.set_accent_help)) { Prefs.nextAccent() },
@@ -1445,6 +1464,8 @@ private fun SettingsScreen(handoff: FocusHandoff) {
         },
         Setting(str(R.string.set_discord), str(R.string.discord_value),
             str(R.string.discord_help)) { showDiscord = true },
+        Setting(str(R.string.set_report), Device.model,
+            str(R.string.report_help)) { showReport = true },
         Setting(str(R.string.set_about), str(R.string.about_value, version ?: ""),
             str(R.string.about_help)),
     )
@@ -1484,6 +1505,36 @@ private fun SettingsScreen(handoff: FocusHandoff) {
         }
     }
     if (showDiscord) DiscordDialog { showDiscord = false }
+    if (showReport) ReportDialog { showReport = false }
+}
+
+@Composable
+private fun ReportDialog(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val closeRequester = remember { FocusRequester() }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Row(
+            Modifier.width(680.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                T(str(R.string.report_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+                T(str(R.string.report_body), 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+                Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Fact(str(R.string.report_tv), Device.model, 96.dp)
+                    Fact("Android", Device.android, 96.dp)
+                    Fact(str(R.string.report_cpu), Device.cpu, 96.dp)
+                    Fact("Open Shelf", Device.ownVersion(ctx), 96.dp)
+                }
+                Row(Modifier.padding(top = 22.dp)) {
+                    Pill(str(R.string.action_close), onClose, solid = true, requester = closeRequester)
+                }
+            }
+            Spacer(Modifier.width(24.dp))
+            Qr(Device.reportUrl(ctx), 240.dp)
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
 }
 
 @Composable

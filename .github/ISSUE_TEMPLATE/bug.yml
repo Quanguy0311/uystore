@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in Open Shelf doesn't work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Settings > Report a problem on the TV shows a QR code that fills in the first four fields for you.
+  - type: input
+    id: tv
+    attributes:
+      label: TV or box
+      description: Brand and model, for example "Xiaomi Mi Box S" or "Sony KD-55X80J"
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version
+      placeholder: Android 12 (API 31)
+    validations:
+      required: true
+  - type: input
+    id: cpu
+    attributes:
+      label: Processor type
+      placeholder: arm64-v8a, armeabi-v7a
+  - type: input
+    id: version
+    attributes:
+      label: Open Shelf version
+      description: Shown at the bottom of Settings
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you pressed, what you expected and what you saw instead. Include the app's name if it's about one app.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Error messages, photos of the screen, or whether it worked before.
