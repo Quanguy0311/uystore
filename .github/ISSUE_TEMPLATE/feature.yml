@@ -1,6 +1,6 @@
 name: Idea
 description: Something Open Shelf could do
-labels: [idea]
+labels: [enhancement]
 body:
   - type: textarea
     id: idea

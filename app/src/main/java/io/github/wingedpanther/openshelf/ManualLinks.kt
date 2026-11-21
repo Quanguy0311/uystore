@@ -91,7 +91,7 @@ object ManualLinks {
         val file = File(ctx.cacheDir, "manual-${repo.replace('/', '_')}.apk")
         try {
             downloadTo(picked.url, file)
-            val pi = ctx.packageManager.getPackageArchiveInfo(file.path, PackageManager.GET_SIGNING_CERTIFICATES)
+            val pi = ctx.packageManager.getPackageArchiveInfo(file.path, 0)
                 ?: return LinkResult.Error(str(R.string.link_err_no_apk))
             if (pi.packageName != expectedPkg) return LinkResult.Error(str(R.string.link_err_package))
             val fileCerts = Device.archiveCerts(ctx, file)

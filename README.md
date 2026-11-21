@@ -6,7 +6,9 @@ Google Play on TV only carries apps that publish there. Plenty of good TV apps o
 
 To install it, open the [Downloader](https://www.aftvnews.com/downloader/) app on your TV and enter the code `3399820`.
 
-Questions, app suggestions and release news: [join the Discord](https://discord.gg/DA9tEsHQHf). Bugs go to [GitHub issues](https://github.com/wingedpanther/openshelf/issues).
+Browse the catalog on your phone at [wingedpanther.github.io/openshelf](https://wingedpanther.github.io/openshelf/).
+
+Questions go to [Discussions](https://github.com/wingedpanther/openshelf/discussions) or [the Discord](https://discord.gg/DA9tEsHQHf), which also has app suggestions and release news. Bugs go to [GitHub issues](https://github.com/wingedpanther/openshelf/issues).
 
 If Open Shelf made your TV nicer to use, you can [buy me a coffee](https://buymeacoffee.com/wingedpanther).
 
@@ -18,12 +20,21 @@ If Open Shelf made your TV nicer to use, you can [buy me a coffee](https://buyme
 
 - Lists about 3,000 Android TV apps from GitHub, in 18 categories
 - Every app in the list declares TV support in its manifest and ships an APK in its latest release
-- Search by name or by what an app does, like "video player" or "launcher"
+- Search by name or by what an app does, like "video player" or "launcher", or press Voice and say it
+- Every app has a 5-digit code. Type it into search to jump straight to the app, or find codes on the website
+- Starter packs install a set of good apps in one go, and a Trending row shows which apps gained the most stars this week
+- Phone companion: scan a QR code, search on your phone, and the TV installs what you pick
+- Install from any GitHub link: type `owner/repo` into search and Open Shelf installs the newest release APK and keeps it updated
 - Picks the APK that matches your TV's CPU
 - Checks the signing key before installing an update, and holds the update if the key changed
 - My Apps shows what's installed, with updates for apps in the catalog and a count of waiting updates on the tab
 - On Android 12 and newer, updates to apps Open Shelf installed skip Android's confirmation screen, so Update all just runs
-- App pages show screenshots from the project's README, the latest release notes, and older releases you can install
+- App pages show screenshots from the project's README, the latest release notes, older releases you can install, the permissions an app asks for, and a note when releases have stopped
+- A parental PIN can guard every install, update and uninstall
+- Back up your apps as a list of codes and restore them on a new TV
+- A row on the TV home screen shows waiting updates and new apps, on launchers that show app rows
+- When a TV blocks installs, a Help screen shows where that brand hides the switch
+- Settings > Report a problem shows a QR code that opens a GitHub issue with your TV's details filled in
 - Light and dark themes, and a choice of accent colours
 - IPTV players and debrid or Stremio streaming clients are hidden by default, with a switch in Settings to show them
 - When an app looks abandoned, its page points to a maintained fork if one ships a newer TV build
@@ -43,7 +54,7 @@ If Open Shelf made your TV nicer to use, you can [buy me a coffee](https://buyme
 
 ## Install
 
-You need an Android TV, Google TV, Fire TV or other Android box running Android 9 or newer.
+You need an Android TV, Google TV, Fire TV or other Android box running Android 6 or newer.
 
 1. On your TV, install Downloader from the Play Store, open it and enter the code `3399820`. It always fetches the latest version.
 2. Or download the latest `OpenShelf-x.y.z.apk` from [Releases](https://github.com/wingedpanther/openshelf/releases) and install it from a computer with `adb install OpenShelf-x.y.z.apk`.
@@ -71,13 +82,13 @@ Apps that draw over the screen, like blue light filters or floating buttons, sto
 adb shell appops set io.github.wingedpanther.openshelf REQUEST_INSTALL_PACKAGES allow
 ```
 
-### My TV runs Android 8 or older
+### Install stays on "Installing" or nothing happens
 
-Open Shelf needs Android 9 or newer, so it won't install there.
+Some TVs and operator boxes block installs that come from apps. Open Shelf gives up after 90 seconds and shows a Help button with the steps for your TV. The [install help page](https://wingedpanther.github.io/openshelf/help.html) has the same steps by brand, plus how to install from a computer.
 
 ## The catalog
 
-The app list is built from public GitHub data and ships inside the APK. An app is included when:
+The app list is built from public GitHub data. A copy ships inside the APK, and Open Shelf downloads a fresh one each week from GitHub Pages. The weekly list is signed, and the app checks the signature before using it. An app is included when:
 
 - the repository isn't a fork, unless the fork has at least 10 stars and either:
   - adds a TV build to an app that never had one,
@@ -87,6 +98,8 @@ The app list is built from public GitHub data and ships inside the APK. An app i
 - that APK's manifest has the Android TV launcher entry
 
 Apps with fewer than 10 stars stay out of browsing, but search still finds them by their exact name.
+
+The crawler is [tools/crawl.py](tools/crawl.py) and runs every Monday in GitHub Actions. Hand fixes to names, categories, hidden apps and starter packs live in [tools/overrides.json](tools/overrides.json). Pull requests to that file are welcome.
 
 ## Build
 

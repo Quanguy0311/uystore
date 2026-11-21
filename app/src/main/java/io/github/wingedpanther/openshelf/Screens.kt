@@ -2,7 +2,6 @@
 
 package io.github.wingedpanther.openshelf
 
-import android.app.Activity
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
@@ -134,7 +133,7 @@ class FocusHandoff {
 
 @Composable
 fun OpenShelf() {
-    val activity = LocalContext.current as Activity
+    val activity = androidx.activity.compose.LocalActivity.current
     var tab by remember { mutableStateOf(Tab.Discover) }
     var page by remember { mutableStateOf<String?>(null) }
     var wallId by remember { mutableStateOf("") }
@@ -190,7 +189,7 @@ fun OpenShelf() {
         when {
             page != null || room != null -> closePage()
             !tabsFocused -> runCatching { tabRequesters.getValue(tab).requestFocus() }
-            else -> activity.finish()
+            else -> activity?.finish()
         }
     }
 
@@ -354,7 +353,7 @@ private fun TopBar(
 private fun Clock(modifier: Modifier) {
     var now by remember { mutableStateOf(Date()) }
     LaunchedEffect(Unit) { while (true) { now = Date(); delay(15_000) } }
-    T(SimpleDateFormat("HH:mm", Locale.getDefault()).format(now), 13.5.sp, modifier, color = C.Stone, weight = FontWeight.Medium)
+    T(SimpleDateFormat("HH:mm", Locale.ROOT).format(now), 13.5.sp, modifier, color = C.Stone, weight = FontWeight.Medium)
 }
 
 @Composable

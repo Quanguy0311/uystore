@@ -38,10 +38,13 @@ object Installer {
 
     fun busy(id: String) = jobs[id].let { it is Job.Downloading || it == Job.Checking || it == Job.Installing }
 
-    fun canInstall(ctx: Context) = ctx.packageManager.canRequestPackageInstalls()
+    @Suppress("DEPRECATION")
+    fun canInstall(ctx: Context) = if (Build.VERSION.SDK_INT >= 26) ctx.packageManager.canRequestPackageInstalls()
+        else Settings.Secure.getInt(ctx.contentResolver, Settings.Secure.INSTALL_NON_MARKET_APPS, 0) == 1
 
     fun openInstallPermission(ctx: Context) {
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
+        val intent = (if (Build.VERSION.SDK_INT >= 26) Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${ctx.packageName}"))
+            else Intent(Settings.ACTION_SECURITY_SETTINGS))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         runCatching { ctx.startActivity(intent) }
             .onFailure { runCatching { ctx.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
@@ -68,7 +71,7 @@ object Installer {
                 val target = if (app.pkg.isNotEmpty()) app else withContext(Dispatchers.IO) {
                     val pi = appCtx.packageManager.getPackageArchiveInfo(file.path, 0) ?: throw IOException(str(R.string.err_incompatible))
                     Device.archiveCerts(appCtx, file).firstOrNull()?.let { direct[app.id] = ManualLink(app.repo, pi.packageName, it, app.version) }
-                    Direct.found(app.id, pi.packageName, pi.longVersionCode)
+                    Direct.found(app.id, pi.packageName, androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(pi))
                     app.copy(pkg = pi.packageName)
                 }
                 val held = withContext(Dispatchers.IO) { checkSignature(appCtx, target, file) }
@@ -146,7 +149,7 @@ object Installer {
                 }
                 val base = if (resume) have else 0L
                 if (!resume) part.delete()
-                val remaining = conn.contentLengthLong
+                val remaining = conn.getHeaderField("Content-Length")?.toLongOrNull() ?: -1L
                 val total = when {
                     remaining > 0 && resume -> base + remaining
                     remaining > 0 -> remaining

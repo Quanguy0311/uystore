@@ -253,8 +253,8 @@ object SelfUpdate {
         val desc = repo?.optString("description").orEmpty()
         return App(
             id = "openshelf", repo = REPO, name = "Open Shelf", pkg = ctx.packageName,
-            versionCode = own.longVersionCode + if (newer(tag.removePrefix("v"), own.versionName.orEmpty())) 1 else 0,
-            versionName = tag.removePrefix("v"), minSdk = 28, room = "App stores", note = desc, desc = desc,
+            versionCode = androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(own) + if (newer(tag.removePrefix("v"), own.versionName.orEmpty())) 1 else 0,
+            versionName = tag.removePrefix("v"), minSdk = 23, room = "App stores", note = desc, desc = desc,
             maker = REPO.substringBefore('/'), stars = repo?.optInt("stargazers_count") ?: 0, licence = "GPL-3.0",
             archived = false, streams = false, version = tag, date = date, certSha256 = CERT,
             art = AppArt(null, null, ICON, emptyList()),
@@ -441,7 +441,9 @@ object L {
     }
 
     fun use(tag: String) {
-        val picked = if (tag.isEmpty()) android.content.res.Resources.getSystem().configuration.locales[0] else Locale.forLanguageTag(tag)
+        @Suppress("DEPRECATION")
+        val system = android.content.res.Resources.getSystem().configuration.let { if (Build.VERSION.SDK_INT >= 24) it.locales[0] else it.locale }
+        val picked = if (tag.isEmpty()) system else Locale.forLanguageTag(tag)
         val locale = if (picked.language == "ar") Locale.Builder().setLocale(picked).setUnicodeLocaleKeyword("nu", "latn").build() else picked
         Locale.setDefault(locale)
         val config = android.content.res.Configuration(app.resources.configuration).apply { setLocale(locale) }
@@ -577,8 +579,9 @@ object Device {
 
     fun all(ctx: Context): Map<String, Installed> {
         if (snapshotTick != tick) {
-            snapshot = ctx.packageManager.getInstalledPackages(PackageManager.GET_SIGNING_CERTIFICATES)
-                .associate { it.packageName to Installed(it.longVersionCode, it.versionName, certs(it), (it.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0) }
+            @Suppress("DEPRECATION")
+            snapshot = ctx.packageManager.getInstalledPackages(if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES else PackageManager.GET_SIGNATURES)
+                .associate { it.packageName to Installed(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName, certs(it), (it.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0) }
             snapshotTick = tick
         }
         return snapshot
@@ -592,7 +595,7 @@ object Device {
 
     fun archiveCerts(ctx: Context, file: File): Set<String> {
         val pm = ctx.packageManager
-        val pi = pm.getPackageArchiveInfo(file.path, PackageManager.GET_SIGNING_CERTIFICATES)
+        val pi = if (Build.VERSION.SDK_INT >= 28) pm.getPackageArchiveInfo(file.path, PackageManager.GET_SIGNING_CERTIFICATES) else null
         val viaSigning = pi?.let { certs(it) }.orEmpty()
         if (viaSigning.isNotEmpty()) return viaSigning
         @Suppress("DEPRECATION")
@@ -602,6 +605,10 @@ object Device {
     }
 
     private fun certs(pi: PackageInfo): Set<String> {
+        if (Build.VERSION.SDK_INT < 28) {
+            @Suppress("DEPRECATION")
+            return pi.signatures?.map { sha256(it.toByteArray()) }?.toSet().orEmpty()
+        }
         val si = pi.signingInfo ?: return emptySet()
         val all = (si.apkContentsSigners.orEmpty().toList() + si.signingCertificateHistory.orEmpty().toList())
         return all.map { sha256(it.toByteArray()) }.toSet()

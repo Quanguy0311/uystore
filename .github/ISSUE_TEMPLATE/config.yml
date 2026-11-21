@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Questions and chat
+  - name: Questions
+    url: https://github.com/wingedpanther/openshelf/discussions/categories/q-a
+    about: Ask how to do something in GitHub Discussions
+  - name: Chat
     url: https://discord.gg/DA9tEsHQHf
-    about: Ask on the Open Shelf Discord
+    about: The Open Shelf Discord

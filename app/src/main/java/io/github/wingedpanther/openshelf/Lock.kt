@@ -69,7 +69,7 @@ object Lock {
     fun setPin(ctx: Context, pin: String) {
         val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
         val tmp = File(ctx.filesDir, "lock.json.tmp")
-        tmp.writeText(JSONObject().put("salt", hex(salt)).put("hash", hex(hash(pin, salt))).toString())
+        tmp.writeText(JSONObject().put("salt", hex(salt)).put("alg", ALG).put("hash", hex(hash(pin, salt, ALG))).toString())
         tmp.renameTo(file(ctx))
         on = true
         openUntil = 0L
@@ -97,7 +97,7 @@ object Lock {
     fun check(ctx: Context, pin: String): Boolean {
         if (waitSeconds() > 0) return false
         val saved = runCatching { JSONObject(file(ctx).readText()) }.getOrNull() ?: return false
-        val ok = MessageDigest.isEqual(hash(pin, unhex(saved.getString("salt"))), unhex(saved.getString("hash")))
+        val ok = MessageDigest.isEqual(hash(pin, unhex(saved.getString("salt")), saved.optString("alg", ALG)), unhex(saved.getString("hash")))
         if (ok) {
             fails = 0
             openUntil = SystemClock.elapsedRealtime() + OPEN_FOR
@@ -107,8 +107,10 @@ object Lock {
         return ok
     }
 
-    private fun hash(pin: String, salt: ByteArray): ByteArray =
-        SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(PBEKeySpec(pin.toCharArray(), salt, ROUNDS, 256)).encoded
+    private val ALG = if (android.os.Build.VERSION.SDK_INT >= 26) "PBKDF2WithHmacSHA256" else "PBKDF2WithHmacSHA1"
+
+    private fun hash(pin: String, salt: ByteArray, alg: String): ByteArray =
+        SecretKeyFactory.getInstance(alg).generateSecret(PBEKeySpec(pin.toCharArray(), salt, ROUNDS, 256)).encoded
 
     private fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
     private fun unhex(s: String) = ByteArray(s.length / 2) { s.substring(it * 2, it * 2 + 2).toInt(16).toByte() }

@@ -22,6 +22,7 @@ object Links {
 object HomeRow {
     private const val MAX = 12
 
+    @android.annotation.SuppressLint("RestrictedApi")
     fun sync(ctx: Context, updates: List<Pair<App, Installed>>, picks: List<App>) {
         if (Build.VERSION.SDK_INT < 26 || !ctx.packageManager.hasSystemFeature("android.software.leanback")) return
         runCatching {
