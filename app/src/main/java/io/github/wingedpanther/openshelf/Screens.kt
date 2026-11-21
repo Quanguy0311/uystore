@@ -196,7 +196,7 @@ fun OpenShelf() {
 
     Box(Modifier.fillMaxSize().background(C.Wall)) {
         Box(Modifier.fillMaxSize().padding(top = 70.dp)) {
-            val app = page?.let { Catalog.byId(it) ?: ManualLinks.byId(it) }
+            val app = page?.let { Catalog.byId(it) ?: ManualLinks.byId(it) ?: Direct.byId(it) }
             val r = room
             if (app != null) {
                 AppPage(app, openApp, handoff)
@@ -893,7 +893,8 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
             }
             T(app.note, 15.5.sp, Modifier.padding(top = 12.dp), color = C.Ink2, maxLines = 2)
             val stale = remember(app.id) { runCatching { java.time.LocalDate.parse(app.date).isBefore(java.time.LocalDate.now().minusYears(1)) }.getOrDefault(false) }
-            if (app.archived) T(str(R.string.archived_note), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+            if (app.id.startsWith("direct-")) T(str(R.string.direct_warning), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
+            else if (app.archived) T(str(R.string.archived_note), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             else if (stale) T(str(R.string.stale_note, Fmt.monthYear(app.date)), 11.5.sp, Modifier.padding(top = 4.dp), color = C.Stone)
             Row(Modifier.padding(top = 10.dp).offset(x = (-4).dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 InstallButton(app, requester = handoff.target)
@@ -1183,7 +1184,26 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, openApp: (Str
             },
             13.5.sp, side.padding(top = 20.dp), color = C.Stone, weight = FontWeight.Medium,
         )
-        if (q.isNotEmpty() && results.isEmpty()) {
+        val repo = remember(query) { Direct.repoOf(query) }
+        if (repo != null) {
+            val scope = rememberCoroutineScope()
+            var looking by remember(repo) { mutableStateOf(false) }
+            var failed by remember(repo) { mutableStateOf(false) }
+            Row(side.padding(top = 10.dp).offset(x = (-4).dp), verticalAlignment = Alignment.CenterVertically) {
+                Pill(str(if (looking) R.string.direct_looking else R.string.direct_lookup, repo), {
+                    if (!looking) {
+                        looking = true
+                        failed = false
+                        scope.launch {
+                            val app = Direct.lookup(repo)
+                            looking = false
+                            if (app != null) openApp(app.id) else failed = true
+                        }
+                    }
+                }, solid = true, icon = Icons.Link)
+                if (failed) T(str(R.string.direct_failed), 13.5.sp, Modifier.padding(start = 10.dp), color = C.Stone)
+            }
+        } else if (q.isNotEmpty() && results.isEmpty()) {
             T(str(R.string.search_tip), 15.5.sp, side.padding(top = 10.dp), color = C.Stone)
         }
         LazyRow(
@@ -1279,6 +1299,7 @@ private fun shelfApps(ctx: Context): List<Pair<App, Installed>> {
     val own = SelfUpdate.app?.takeIf { SelfUpdate.ready(ctx) }?.let { listOf(it to Device.installed(ctx, it.pkg)!!) }.orEmpty()
     return own + Catalog.apps.groupBy { it.pkg }.mapNotNull { (pkg, list) ->
         Device.installed(ctx, pkg)?.let { i -> (list.firstOrNull { it.certSha256 != null && it.certSha256 in i.certs } ?: list.firstOrNull { it.forkOf == null } ?: list.first()) to i }
+            ?.takeIf { (a, i) -> !(i.system && a.certSha256 != null && a.certSha256 !in i.certs) }
     }
 }
 
@@ -1596,6 +1617,7 @@ private fun SettingsScreen(openApp: (String) -> Unit, handoff: FocusHandoff) {
     var showReport by remember { mutableStateOf(false) }
     var showPin by remember { mutableStateOf(false) }
     var showBackup by remember { mutableStateOf(false) }
+    var showPhone by remember { mutableStateOf(false) }
     var showRestore by remember { mutableStateOf(false) }
     val backup = remember(tick) { backupApps(ctx) }
     val rows = listOf(
@@ -1627,6 +1649,8 @@ private fun SettingsScreen(openApp: (String) -> Unit, handoff: FocusHandoff) {
             str(R.string.set_cache_help)) {
             Device.clearCache(ctx); cacheTick++
         },
+        Setting(str(R.string.set_phone), str(R.string.phone_value),
+            str(R.string.phone_help)) { showPhone = true },
         Setting(str(R.string.set_backup), plural(R.plurals.apps, backup.size, backup.size),
             str(R.string.backup_help)) { showBackup = true },
         Setting(str(R.string.set_restore), str(R.string.restore_value),
@@ -1677,7 +1701,52 @@ private fun SettingsScreen(openApp: (String) -> Unit, handoff: FocusHandoff) {
     if (showReport) ReportDialog { showReport = false }
     if (showPin) PinSetup { showPin = false }
     if (showBackup) BackupDialog(backup) { showBackup = false }
+    if (showPhone) PhoneDialog { showPhone = false }
     if (showRestore) RestoreDialog(openApp) { showRestore = false }
+}
+
+@Composable
+private fun PhoneDialog(onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    val closeRequester = remember { FocusRequester() }
+    val url = remember { Companion.start(ctx) }
+    val close = { Companion.stop(); onClose() }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { Companion.stop() } }
+    Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Row(
+            Modifier.width(760.dp).shadow(16.dp, RoundedCornerShape(18.dp))
+                .background(C.Mat, RoundedCornerShape(18.dp)).padding(28.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                T(str(R.string.phone_title), 22.sp, weight = FontWeight.SemiBold, tight = true)
+                T(str(if (url != null) R.string.phone_body else R.string.phone_offline), 14.5.sp, Modifier.padding(top = 8.dp), color = C.Ink2)
+                if (url != null) T(url.substringBefore("?"), 16.sp, Modifier.padding(top = 12.dp), weight = FontWeight.SemiBold)
+                val asked = Companion.asked.distinct().mapNotNull { Catalog.byId(it) ?: Direct.byId(it) }.takeLast(4)
+                if (asked.isNotEmpty()) {
+                    Column(Modifier.padding(top = 14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        asked.forEach { a ->
+                            val job = Installer.jobs[a.id]
+                            val line = when (job) {
+                                is Job.Downloading -> str(R.string.job_downloading, (job.fraction * 100).toInt())
+                                Job.Checking, Job.Installing -> str(R.string.job_installing)
+                                is Job.Failed -> job.message
+                                else -> if (Device.installedAs(ctx, a) != null) str(R.string.status_installed) else ""
+                            }
+                            T(if (line.isEmpty()) a.name else "${a.name}  ·  $line", 13.sp, color = C.Stone, maxLines = 1)
+                        }
+                    }
+                }
+                Row(Modifier.padding(top = 22.dp)) {
+                    Pill(str(R.string.action_close), close, solid = true, requester = closeRequester)
+                }
+            }
+            if (url != null) {
+                Spacer(Modifier.width(24.dp))
+                Qr(url, 220.dp)
+            }
+            LaunchedEffect(Unit) { runCatching { closeRequester.requestFocus() } }
+        }
+    }
 }
 
 private fun backupApps(ctx: Context): List<App> =

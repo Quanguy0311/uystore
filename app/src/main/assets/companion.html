@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Shelf on your TV</title>
+<style>
+:root { --wall: #fafaf8; --deep: #f2f2ee; --mat: #fff; --ink: #1d1d1f; --ink2: #3a3a3c; --stone: #6e6e73; --hair: #e3e3de; --accent: #3f6f55; --on: #fff; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --wall: #121211; --deep: #1a1a18; --mat: #222220; --ink: #f2f2ee; --ink2: #cfcfc9; --stone: #9c9c96; --hair: #2e2e2b; --accent: #7db592; --on: #121211; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--wall); color: var(--ink); font: 16px/1.45 system-ui, -apple-system, sans-serif; }
+main { max-width: 560px; margin: 0 auto; padding: 18px 16px 60px; }
+h1 { font-size: 24px; letter-spacing: -0.02em; margin: 6px 0 2px; }
+.sub { color: var(--stone); font-size: 14px; margin: 0 0 16px; }
+input { width: 100%; font: inherit; font-size: 17px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--hair); background: var(--mat); color: var(--ink); }
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.list { margin-top: 12px; display: grid; gap: 4px; }
+.row { display: flex; align-items: center; gap: 12px; padding: 10px 6px; border-bottom: 1px solid var(--hair); }
+.row img, .row .ph { width: 40px; height: 40px; border-radius: 10px; background: var(--deep); flex: none; object-fit: cover; }
+.row .t { flex: 1; min-width: 0; }
+.row b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row small { color: var(--stone); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button { font: inherit; font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 99px; border: 0; background: var(--ink); color: var(--wall); flex: none; }
+button:disabled { background: transparent; color: var(--stone); border: 1px solid var(--hair); }
+.gh { display: flex; gap: 8px; margin-top: 22px; }
+.gh input { font-size: 15px; }
+h2 { font-size: 15px; color: var(--stone); font-weight: 600; margin: 26px 0 4px; }
+.note { color: var(--stone); font-size: 13.5px; margin-top: 8px; }
+.err { background: var(--deep); padding: 14px; border-radius: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Open Shelf</h1>
+  <p class="sub">Pick an app here and your TV installs it. Android asks you to confirm each new app on the TV, so keep the remote nearby.</p>
+  <input id="q" type="search" placeholder="Search apps or type codes" autocomplete="off">
+  <div class="list" id="list"></div>
+  <h2>Sent to your TV</h2>
+  <div class="list" id="sent"><div class="note">Nothing yet.</div></div>
+  <h2>Not in the list?</h2>
+  <div class="gh"><input id="repo" placeholder="github.com/owner/repo" autocapitalize="off" autocorrect="off"><button id="go">Install</button></div>
+  <div class="note" id="ghnote">Open Shelf takes the newest APK from that repository’s releases. It can’t check that the app is made for TV.</div>
+</main>
+<script>
+const token = new URLSearchParams(location.search).get("t") || "";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const mb = (n) => (n / 1e6).toFixed(1) + " MB";
+const labels = { installed: "Installed", update: "Update", installing: "Installing", failed: "Failed", held: "Held", unsupported: "Won’t run" };
+
+async function api(path, body) {
+  const r = await fetch(path + (path.includes("?") ? "&" : "?") + "t=" + encodeURIComponent(token), body ? { method: "POST", body: new URLSearchParams(body) } : {});
+  if (r.status === 403) throw new Error("token");
+  return r.json();
+}
+
+function row(a, action) {
+  const busy = a.state && a.state !== "update";
+  const label = a.state.startsWith("downloading") ? a.state.replace("downloading", "") : labels[a.state] || "Install";
+  return `<div class="row">
+    ${a.icon ? `<img src="${esc(a.icon)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
+    <div class="t"><b>${esc(a.name)}</b><small>${a.code ? a.code + " · " : ""}${esc(a.note)}</small></div>
+    ${action ? `<button data-code="${a.code}" ${busy ? "disabled" : ""}>${esc(label)}${!a.state ? " · " + mb(a.size) : ""}</button>` : `<small>${esc(label)}</small>`}
+  </div>`;
+}
+
+let timer;
+async function search() {
+  try {
+    const apps = await api("/api/search?q=" + encodeURIComponent($("q").value));
+    $("list").innerHTML = apps.length ? apps.map((a) => row(a, true)).join("") : `<div class="note">No apps match.</div>`;
+  } catch (e) { fail(e); }
+}
+
+async function status() {
+  try {
+    const apps = await api("/api/status");
+    if (apps.length) $("sent").innerHTML = apps.map((a) => row(a, false)).join("");
+  } catch (e) { fail(e); }
+}
+
+function fail(e) {
+  clearInterval(poll);
+  document.querySelector("main").innerHTML = `<div class="err">${e.message === "token"
+    ? "This link has expired. Open Settings, then Phone companion, on the TV and scan the new code."
+    : "Can’t reach the TV. Check that your phone is on the same Wi-Fi, and that Phone companion is still open on the TV."}</div>`;
+}
+
+$("q").addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(search, 200); });
+$("list").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-code]"); if (!b) return;
+  b.disabled = true; b.textContent = "Sent";
+  await api("/api/install", { code: b.dataset.code }).catch(fail);
+  status();
+});
+$("go").addEventListener("click", async () => {
+  const repo = $("repo").value.trim(); if (!repo) return;
+  const r = await api("/api/install", { repo }).catch(fail);
+  $("ghnote").textContent = r && r.ok ? "Sent. Your TV is looking up " + repo + "." : "That doesn’t look like a GitHub repository.";
+  setTimeout(status, 2500);
+});
+const poll = setInterval(status, 2000);
+search(); status();
+</script>
+</body>
+</html>

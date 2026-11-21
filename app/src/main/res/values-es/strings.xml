@@ -302,4 +302,15 @@
         <item quantity="other">%1$d apps de tu copia</item>
     </plurals>
     <string name="channel_update">Actualización lista: %1$s → %2$s</string>
+    <string name="direct_lookup">Buscar %1$s en GitHub</string>
+    <string name="direct_looking">Buscando %1$s…</string>
+    <string name="direct_failed">No hay ninguna versión con APK.</string>
+    <string name="direct_note">No está en la lista de Open Shelf.</string>
+    <string name="direct_warning">No está en la lista de Open Shelf, así que nadie comprobó que esté hecha para TV. Cuando la instales, Open Shelf la mantendrá actualizada.</string>
+    <string name="set_phone">Usar el móvil</string>
+    <string name="phone_value">Abrir</string>
+    <string name="phone_help">Busca y elige apps en el móvil y la TV las instala. El móvil tiene que estar en la misma wifi.</string>
+    <string name="phone_title">Usa tu móvil</string>
+    <string name="phone_body">Escanea el código con el móvil en la misma wifi. Busca allí, pulsa Instalar y confirma en la TV. Deja esta pantalla abierta mientras lo usas.</string>
+    <string name="phone_offline">Esta TV no está en una red doméstica y el móvil no puede llegar a ella. Conéctala por wifi o cable y vuelve a intentarlo.</string>
 </resources>

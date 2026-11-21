@@ -1,0 +1,156 @@
+package io.github.wingedpanther.openshelf
+
+import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.BufferedInputStream
+import java.io.OutputStream
+import java.net.Inet4Address
+import java.net.NetworkInterface
+import java.net.ServerSocket
+import java.net.Socket
+import java.net.URLDecoder
+import java.security.SecureRandom
+import kotlin.concurrent.thread
+
+object Companion {
+    private const val FIRST_PORT = 8642
+    private val main = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var server: ServerSocket? = null
+    private var token = ""
+
+    var url by mutableStateOf<String?>(null)
+        private set
+    val asked = mutableStateListOf<String>()
+
+    fun start(ctx: Context): String? {
+        url?.let { return it }
+        val ip = localIp() ?: return null
+        val socket = (FIRST_PORT until FIRST_PORT + 10).firstNotNullOfOrNull { runCatching { ServerSocket(it) }.getOrNull() } ?: return null
+        val app = ctx.applicationContext
+        token = (1..10).map { "abcdefghjkmnpqrstuvwxyz23456789"[SecureRandom().nextInt(31)] }.joinToString("")
+        server = socket
+        thread(name = "companion", isDaemon = true) {
+            while (!socket.isClosed) {
+                val client = runCatching { socket.accept() }.getOrNull() ?: break
+                thread(isDaemon = true) { runCatching { client.use { handle(app, it) } } }
+            }
+        }
+        url = "http://$ip:${socket.localPort}/?t=$token"
+        return url
+    }
+
+    fun stop() {
+        runCatching { server?.close() }
+        server = null
+        url = null
+    }
+
+    private fun localIp(): String? = runCatching {
+        NetworkInterface.getNetworkInterfaces().toList()
+            .filter { it.isUp && !it.isLoopback }
+            .flatMap { it.inetAddresses.toList() }
+            .firstOrNull { it is Inet4Address && it.isSiteLocalAddress }?.hostAddress
+    }.getOrNull()
+
+    private fun handle(ctx: Context, client: Socket) {
+        client.soTimeout = 10_000
+        val input = BufferedInputStream(client.getInputStream())
+        val head = StringBuilder()
+        while (!head.endsWith("\r\n\r\n")) {
+            val b = input.read()
+            if (b < 0 || head.length > 8192) return
+            head.append(b.toChar())
+        }
+        val lines = head.lines()
+        val (method, target) = lines.first().split(" ").let { (it.getOrNull(0) ?: "") to (it.getOrNull(1) ?: "/") }
+        val length = lines.firstOrNull { it.startsWith("Content-Length:", true) }?.substringAfter(':')?.trim()?.toIntOrNull() ?: 0
+        val body = if (length in 1..4096) String(ByteArray(length).also { var n = 0; while (n < length) { val r = input.read(it, n, length - n); if (r < 0) break; n += r } }) else ""
+        val path = target.substringBefore('?')
+        val query = params(target.substringAfter('?', "")) + params(body)
+        val out = client.getOutputStream()
+        if (path == "/" && method == "GET") return send(out, 200, "text/html; charset=utf-8", ctx.assets.open("companion.html").use { it.readBytes() })
+        if (query["t"] != token) return send(out, 403, "application/json", """{"error":"token"}""".toByteArray())
+        when (path) {
+            "/api/search" -> send(out, 200, "application/json", search(ctx, query["q"].orEmpty()).toString().toByteArray())
+            "/api/install" -> send(out, 200, "application/json", install(ctx, query).toString().toByteArray())
+            "/api/status" -> send(out, 200, "application/json", status(ctx).toString().toByteArray())
+            else -> send(out, 404, "application/json", """{"error":"not found"}""".toByteArray())
+        }
+    }
+
+    private fun params(s: String): Map<String, String> = s.split('&').filter { '=' in it }.associate {
+        URLDecoder.decode(it.substringBefore('='), "UTF-8") to URLDecoder.decode(it.substringAfter('='), "UTF-8")
+    }
+
+    private fun send(out: OutputStream, code: Int, type: String, body: ByteArray) {
+        val reason = when (code) { 200 -> "OK"; 403 -> "Forbidden"; else -> "Not Found" }
+        out.write("HTTP/1.1 $code $reason\r\nContent-Type: $type\r\nContent-Length: ${body.size}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n".toByteArray())
+        out.write(body)
+        out.flush()
+    }
+
+    private fun entry(ctx: Context, a: App): JSONObject {
+        val installed = Device.installedAs(ctx, a)
+        val job = Installer.jobs[a.id]
+        val state = when {
+            job is Job.Downloading -> "downloading ${(job.fraction * 100).toInt()}%"
+            job == Job.Checking || job == Job.Installing -> "installing"
+            job is Job.Failed -> "failed"
+            job is Job.Held -> "held"
+            installed != null && installed.versionCode < a.versionCode -> "update"
+            installed != null -> "installed"
+            !a.runsHere -> "unsupported"
+            else -> ""
+        }
+        return JSONObject().put("id", a.id).put("code", a.code ?: JSONObject.NULL).put("name", a.name).put("note", a.note)
+            .put("icon", a.art.icon ?: JSONObject.NULL).put("stars", a.stars).put("state", state)
+            .put("size", pickApk(a).size)
+    }
+
+    private fun search(ctx: Context, q: String): JSONArray {
+        val words = q.lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        val codes = Regex("\\d{5}").findAll(q).map { it.value }.toList()
+        val hits = when {
+            codes.isNotEmpty() -> codes.mapNotNull { Catalog.byCode(it) }
+            words.isEmpty() -> Catalog.visible.take(30)
+            else -> Catalog.apps.filter { a ->
+                val hay = "${a.name} ${a.note} ${a.desc} ${a.room} ${a.repo}".lowercase()
+                Catalog.shown(a) && words.all { hay.contains(it) }
+            }.sortedWith(compareByDescending<App> { it.name.lowercase().contains(q.lowercase()) }.thenByDescending { it.stars }).take(30)
+        }
+        return JSONArray(hits.map { entry(ctx, it) })
+    }
+
+    private fun install(ctx: Context, p: Map<String, String>): JSONObject {
+        val code = p["code"]
+        val repo = p["repo"]?.let { Direct.repoOf(it) }
+        if (code != null) {
+            val app = Catalog.byCode(code) ?: return JSONObject().put("ok", false).put("error", "unknown code")
+            main.launch { asked.add(app.id); Installer.start(ctx, app) }
+            return JSONObject().put("ok", true).put("name", app.name)
+        }
+        if (repo != null) {
+            main.launch {
+                val app = Direct.lookup(repo)
+                if (app != null) {
+                    asked.add(app.id)
+                    Installer.start(ctx, app)
+                }
+            }
+            return JSONObject().put("ok", true).put("name", repo)
+        }
+        return JSONObject().put("ok", false).put("error", "nothing to install")
+    }
+
+    private fun status(ctx: Context): JSONArray =
+        JSONArray(asked.distinct().mapNotNull { id -> (Catalog.byId(id) ?: Direct.byId(id))?.let { entry(ctx, it) } })
+}

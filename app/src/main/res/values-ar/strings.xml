@@ -326,4 +326,15 @@
         <item quantity="other">%1$d تطبيق من نسختك الاحتياطية</item>
     </plurals>
     <string name="channel_update">تحديث جاهز: %1$s ← %2$s</string>
+    <string name="direct_lookup">ابحث عن %1$s في GitHub</string>
+    <string name="direct_looking">جارٍ البحث عن %1$s…</string>
+    <string name="direct_failed">لا يوجد إصدار فيه ملف APK.</string>
+    <string name="direct_note">ليس في قائمة Open Shelf.</string>
+    <string name="direct_warning">ليس في قائمة Open Shelf، لذا لم يتحقق أحد من أنه مصمم للتلفاز. بعد تثبيته يُبقيه Open Shelf محدّثًا.</string>
+    <string name="set_phone">التحكم من الهاتف</string>
+    <string name="phone_value">فتح</string>
+    <string name="phone_help">ابحث عن التطبيقات واخترها من هاتفك وسيثبّتها التلفاز. يجب أن يكون هاتفك على شبكة Wi-Fi نفسها.</string>
+    <string name="phone_title">استخدم هاتفك</string>
+    <string name="phone_body">امسح الرمز بهاتفك وهو على شبكة Wi-Fi نفسها. ابحث هناك واضغط تثبيت ثم أكّد على التلفاز. اترك هذه الشاشة مفتوحة أثناء الاستخدام.</string>
+    <string name="phone_offline">هذا التلفاز ليس على شبكة منزلية، فلا يستطيع هاتفك الوصول إليه. صِله بشبكة Wi-Fi أو سلكية وحاول مرة أخرى.</string>
 </resources>

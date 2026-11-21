@@ -185,6 +185,11 @@ object ManualLinks {
 
     fun appId(repo: String) = "manual-${repo.replace('/', '_')}"
 
+    fun addInstalled(ctx: Context, repo: String, pkg: String, cert: String, tag: String) {
+        if (Catalog.apps.any { it.pkg == pkg }) return
+        add(ctx, ManualLink(repo, pkg, cert, tag))
+    }
+
     private fun appLabel(ctx: Context, pkg: String): String = runCatching {
         ctx.packageManager.getApplicationLabel(
             ctx.packageManager.getApplicationInfo(pkg, 0),

@@ -1,6 +1,7 @@
 package io.github.wingedpanther.openshelf
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
@@ -566,7 +567,7 @@ object Images {
     private fun hash(s: String) = MessageDigest.getInstance("SHA-1").digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
 }
 
-data class Installed(val versionCode: Long, val versionName: String?, val certs: Set<String>)
+data class Installed(val versionCode: Long, val versionName: String?, val certs: Set<String>, val system: Boolean = false)
 
 object Device {
     var tick by mutableIntStateOf(0)
@@ -577,7 +578,7 @@ object Device {
     fun all(ctx: Context): Map<String, Installed> {
         if (snapshotTick != tick) {
             snapshot = ctx.packageManager.getInstalledPackages(PackageManager.GET_SIGNING_CERTIFICATES)
-                .associate { it.packageName to Installed(it.longVersionCode, it.versionName, certs(it)) }
+                .associate { it.packageName to Installed(it.longVersionCode, it.versionName, certs(it), (it.applicationInfo?.flags ?: 0) and ApplicationInfo.FLAG_SYSTEM != 0) }
             snapshotTick = tick
         }
         return snapshot

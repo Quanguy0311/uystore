@@ -302,4 +302,15 @@
         <item quantity="other">%1$d Apps aus deiner Sicherung</item>
     </plurals>
     <string name="channel_update">Update bereit: %1$s → %2$s</string>
+    <string name="direct_lookup">%1$s auf GitHub suchen</string>
+    <string name="direct_looking">Suche %1$s…</string>
+    <string name="direct_failed">Dort gibt es kein Release mit APK.</string>
+    <string name="direct_note">Nicht in der Open-Shelf-Liste.</string>
+    <string name="direct_warning">Nicht in der Open-Shelf-Liste, also hat niemand geprüft, ob sie für Fernseher gemacht ist. Nach der Installation hält Open Shelf sie aktuell.</string>
+    <string name="set_phone">Handy als Fernbedienung</string>
+    <string name="phone_value">Öffnen</string>
+    <string name="phone_help">Suche Apps auf dem Handy aus, und der Fernseher installiert sie. Das Handy muss im selben WLAN sein.</string>
+    <string name="phone_title">Mit dem Handy steuern</string>
+    <string name="phone_body">Scanne den Code mit dem Handy im selben WLAN. Such dort, drück Installieren und bestätige am Fernseher. Lass diese Anzeige offen, solange du es benutzt.</string>
+    <string name="phone_offline">Dieser Fernseher ist in keinem Heimnetz, das Handy erreicht ihn nicht. Verbinde ihn mit WLAN oder LAN und versuche es noch einmal.</string>
 </resources>

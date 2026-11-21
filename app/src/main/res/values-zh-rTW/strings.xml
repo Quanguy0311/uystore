@@ -295,4 +295,15 @@
         <item quantity="other">備份中的 %1$d 個應用程式</item>
     </plurals>
     <string name="channel_update">有更新：%1$s → %2$s</string>
+    <string name="direct_lookup">在 GitHub 上查詢 %1$s</string>
+    <string name="direct_looking">正在查詢 %1$s…</string>
+    <string name="direct_failed">那裡沒有附 APK 的版本。</string>
+    <string name="direct_note">不在 Open Shelf 清單中。</string>
+    <string name="direct_warning">不在 Open Shelf 清單中，沒人確認過它適合電視。安裝後，Open Shelf 會幫它保持更新。</string>
+    <string name="set_phone">手機助手</string>
+    <string name="phone_value">開啟</string>
+    <string name="phone_help">在手機上搜尋並選擇應用程式，電視會幫你安裝。手機需連上同一個 Wi-Fi。</string>
+    <string name="phone_title">用手機操作</string>
+    <string name="phone_body">用連著同一個 Wi-Fi 的手機掃描 QR 碼。在手機上搜尋並按安裝，然後在電視上確認。使用期間請保持此畫面開啟。</string>
+    <string name="phone_offline">這台電視沒有連上家用網路，手機無法連線。請把電視連上 Wi-Fi 或網路線後再試。</string>
 </resources>

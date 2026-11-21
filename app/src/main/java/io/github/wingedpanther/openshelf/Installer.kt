@@ -65,14 +65,20 @@ object Installer {
             try {
                 download(appCtx, apk, file) { done, total -> jobs[app.id] = Job.Downloading(done, total) }
                 jobs[app.id] = Job.Checking
-                val held = withContext(Dispatchers.IO) { checkSignature(appCtx, app, file) }
+                val target = if (app.pkg.isNotEmpty()) app else withContext(Dispatchers.IO) {
+                    val pi = appCtx.packageManager.getPackageArchiveInfo(file.path, 0) ?: throw IOException(str(R.string.err_incompatible))
+                    Device.archiveCerts(appCtx, file).firstOrNull()?.let { direct[app.id] = ManualLink(app.repo, pi.packageName, it, app.version) }
+                    Direct.found(app.id, pi.packageName, pi.longVersionCode)
+                    app.copy(pkg = pi.packageName)
+                }
+                val held = withContext(Dispatchers.IO) { checkSignature(appCtx, target, file) }
                 if (held != null) {
                     jobs[app.id] = Job.Held(held)
                     return@launch
                 }
                 jobs[app.id] = Job.Installing
                 val session = try {
-                    withContext(Dispatchers.IO) { commit(appCtx, app, file) }
+                    withContext(Dispatchers.IO) { commit(appCtx, target, file) }
                 } catch (e: Exception) {
                     if (!handOff(appCtx, app.id, file)) throw e
                     null
@@ -186,7 +192,7 @@ object Installer {
     private fun commit(ctx: Context, app: App, file: File): Int {
         val pi = ctx.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-            setAppPackageName(app.pkg)
+            if (app.pkg.isNotEmpty()) setAppPackageName(app.pkg)
             setSize(file.length())
             if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         }
@@ -243,8 +249,11 @@ object Installer {
         waiting.removeFirstOrNull()?.let { confirm(ctx, it) }
     }
 
-    fun finished(id: String) {
+    private val direct = HashMap<String, ManualLink>()
+
+    fun finished(ctx: Context, id: String) {
         jobs.remove(id)
+        direct.remove(id)?.let { ManualLinks.addInstalled(ctx, it.repo, it.pkg, it.cert, it.tag) }
         Device.tick++
     }
 
@@ -266,7 +275,7 @@ class InstallResultReceiver : BroadcastReceiver() {
         if (status != PackageInstaller.STATUS_PENDING_USER_ACTION) Installer.settled(ctx, id)
         when (status) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> Installer.confirm(ctx, intent)
-            PackageInstaller.STATUS_SUCCESS -> Installer.finished(id)
+            PackageInstaller.STATUS_SUCCESS -> Installer.finished(ctx.applicationContext, id)
             PackageInstaller.STATUS_FAILURE_ABORTED -> Installer.cancelled(id)
             PackageInstaller.STATUS_FAILURE_CONFLICT ->
                 Installer.failed(id, str(R.string.err_conflict))

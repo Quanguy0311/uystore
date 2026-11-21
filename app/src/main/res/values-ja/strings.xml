@@ -295,4 +295,15 @@
         <item quantity="other">バックアップのアプリ %1$d件</item>
     </plurals>
     <string name="channel_update">アップデートあり: %1$s → %2$s</string>
+    <string name="direct_lookup">GitHubで%1$sを調べる</string>
+    <string name="direct_looking">%1$sを調べています…</string>
+    <string name="direct_failed">APK付きのリリースが見つかりません。</string>
+    <string name="direct_note">Open Shelfのリストにはありません。</string>
+    <string name="direct_warning">Open Shelfのリストにないため、テレビ向けかどうかは確認されていません。インストール後はOpen Shelfが更新を管理します。</string>
+    <string name="set_phone">スマホから操作</string>
+    <string name="phone_value">開く</string>
+    <string name="phone_help">スマホでアプリを探して選ぶと、テレビがインストールします。スマホは同じWi-Fiにつないでください。</string>
+    <string name="phone_title">スマホで操作</string>
+    <string name="phone_body">同じWi-Fiのスマホでコードを読み取ってください。スマホで検索してインストールを押し、テレビで確認します。使っている間はこの画面を開いたままにしてください。</string>
+    <string name="phone_offline">このテレビはホームネットワークにつながっていないため、スマホから接続できません。Wi-Fiか有線LANにつないで、もう一度試してください。</string>
 </resources>

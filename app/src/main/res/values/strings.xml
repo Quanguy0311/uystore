@@ -303,4 +303,15 @@
         <item quantity="other">%1$d apps from your backup</item>
     </plurals>
     <string name="channel_update">Update ready: %1$s → %2$s</string>
+    <string name="direct_lookup">Look up %1$s on GitHub</string>
+    <string name="direct_looking">Looking up %1$s…</string>
+    <string name="direct_failed">No release with an APK there.</string>
+    <string name="direct_note">Not in the Open Shelf list.</string>
+    <string name="direct_warning">Not in the Open Shelf list, so nobody checked it’s made for TV. After you install it, Open Shelf keeps it updated.</string>
+    <string name="set_phone">Phone companion</string>
+    <string name="phone_value">Open</string>
+    <string name="phone_help">Search and pick apps on your phone, and the TV installs them. Your phone needs to be on the same Wi-Fi.</string>
+    <string name="phone_title">Use your phone</string>
+    <string name="phone_body">Scan the code with your phone on the same Wi-Fi. Search there, press Install, then confirm on the TV. Keep this screen open while you use it.</string>
+    <string name="phone_offline">This TV isn’t on a home network, so your phone can’t reach it. Connect the TV to Wi-Fi or Ethernet and try again.</string>
 </resources>
