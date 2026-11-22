@@ -29,6 +29,8 @@ jobs:
 
       - name: Start from the published catalog
         run: |
+          mkdir -p work
+          cp app/src/main/assets/catalog.json work/seed.json
           curl -fsSL https://wingedpanther.github.io/openshelf/catalog.json -o published.json && mv published.json app/src/main/assets/catalog.json || true
           rm -f work/discover.json work/enrich.json work/forks.json
 

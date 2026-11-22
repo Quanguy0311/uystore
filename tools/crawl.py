@@ -39,6 +39,7 @@ TODAY = datetime.now(timezone.utc)
 MAX_AGE = timedelta(days=3 * 365)
 QUERY = "LEANBACK_LAUNCHER filename:AndroidManifest.xml"
 OVERRIDES = json.loads((Path(__file__).resolve().parent / "overrides.json").read_text())
+CATALOG = Path(__file__).resolve().parent.parent / "app/src/main/assets/catalog.json"
 
 def connect(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None, **kw):
     err = OSError(f"no address for {address[0]}")
@@ -95,6 +96,9 @@ def code_search(q, page=1):
     url = "https://api.github.com/search/code?" + urllib.parse.urlencode({"q": q, "per_page": 100, "page": page})
     return api(url)
 
+def listed(path: Path):
+    return json.loads(path.read_text())["apps"] if path.exists() else []
+
 def discover(work: Path):
     out = work / "discover.json"
     state = json.loads(out.read_text()) if out.exists() else {"done": [], "repos": {}}
@@ -133,6 +137,9 @@ def discover(work: Path):
             harvest(lo, hi, kind)
     for full in OVERRIDES.get("extra", []):
         state["repos"].setdefault(full, ["(overrides.json)"])
+    for a in listed(CATALOG) + listed(work / "seed.json"):
+        if not a.get("forkOf"):
+            state["forks" if a.get("basedOn") else "repos"].setdefault(a["repo"], ["(catalog)"])
     save()
     log(f"discover: {len(state['repos'])} repos, {len(state['forks'])} forks")
 
@@ -641,9 +648,13 @@ def build(work: Path, out_path: Path):
     arts = json.loads((work / "art.json").read_text()) if (work / "art.json").exists() else {}
     previous = json.loads(out_path.read_text()) if out_path.exists() else {"apps": []}
     before = previous["apps"]
-    seen_before = {x["repo"]: x.get("added") for x in before}
+    seed = listed(work / "seed.json")
+    seen_before = {x["repo"]: x.get("added") for x in seed + before}
     stars_before = {x["repo"]: x["stars"] for x in before}
     codes_before = {x["repo"]: x["code"] for x in before if x.get("code")}
+    for x in seed:
+        if x.get("code") and x["repo"] not in codes_before and x["code"] not in codes_before.values():
+            codes_before[x["repo"]] = x["code"]
     same_day = previous.get("generated") == TODAY.strftime("%Y-%m-%d")
     since = previous.get("trendSince") if same_day else previous.get("generated")
     trend_before = {x["repo"]: x.get("trend", 0) for x in before} if same_day else {}
@@ -767,7 +778,7 @@ def main():
     for s in stages:
         log(f"== {s}")
         if s == "build":
-            build(work, Path(__file__).resolve().parent.parent / "app/src/main/assets/catalog.json")
+            build(work, CATALOG)
         else:
             globals()[s](work)
     return 0
