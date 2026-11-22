@@ -313,4 +313,5 @@
     <string name="phone_title">Mit dem Handy steuern</string>
     <string name="phone_body">Scanne den Code mit dem Handy im selben WLAN. Such dort, drück Installieren und bestätige am Fernseher. Lass diese Anzeige offen, solange du es benutzt.</string>
     <string name="phone_offline">Dieser Fernseher ist in keinem Heimnetz, das Handy erreicht ihn nicht. Verbinde ihn mit WLAN oder LAN und versuche es noch einmal.</string>
+    <string name="pack_held">Zurückgehalten, anderer Schlüssel</string>
 </resources>

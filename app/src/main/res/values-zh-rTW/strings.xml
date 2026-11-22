@@ -306,4 +306,5 @@
     <string name="phone_title">用手機操作</string>
     <string name="phone_body">用連著同一個 Wi-Fi 的手機掃描 QR 碼。在手機上搜尋並按安裝，然後在電視上確認。使用期間請保持此畫面開啟。</string>
     <string name="phone_offline">這台電視沒有連上家用網路，手機無法連線。請把電視連上 Wi-Fi 或網路線後再試。</string>
+    <string name="pack_held">已暫停，金鑰不同</string>
 </resources>

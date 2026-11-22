@@ -165,7 +165,7 @@ fun OpenShelf() {
 
     val updates = remember(Device.tick, SelfUpdate.app) { updateCount(ctx) }
     LaunchedEffect(updates, Catalog.apps) {
-        val ready = shelfApps(ctx).filter { (a, i) -> a.id != "openshelf" && i.versionCode < a.versionCode && (a.certSha256 == null || i.certs.isEmpty() || a.certSha256 in i.certs) }
+        val ready = shelfApps(ctx).filter { (a, i) -> a.pkg != ctx.packageName && i.versionCode < a.versionCode && (a.certSha256 == null || i.certs.isEmpty() || a.certSha256 in i.certs) }
         val picks = Catalog.trending().take(8).ifEmpty { Catalog.added().take(8) }
         withContext(Dispatchers.IO) { HomeRow.sync(ctx, ready, picks) }
     }
@@ -500,6 +500,7 @@ fun AppListDialog(title: String, body: String, apps: List<App>, openApp: (String
                             job is Job.Downloading -> str(R.string.job_downloading, (job.fraction * 100).toInt())
                             job == Job.Checking || job == Job.Installing -> str(R.string.job_installing)
                             job is Job.Failed -> str(R.string.pack_failed)
+                            job is Job.Held -> str(R.string.pack_held)
                             installed -> str(R.string.status_installed)
                             !a.runsHere -> str(R.string.unsupported_short)
                             else -> Fmt.mb(pickApk(a).size)
@@ -873,7 +874,7 @@ private fun AppPage(app: App, openApp: (String) -> Unit, handoff: FocusHandoff) 
             }
         }
         Spacer(Modifier.width(36.dp))
-        Column(Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AppIcon(app, 52.dp, Modifier.shadow(3.dp, RoundedCornerShape(11.dp)))
                 Spacer(Modifier.width(13.dp))
@@ -1494,6 +1495,7 @@ private fun LinkDialog(pkg: String, label: String, onDismiss: () -> Unit, onLink
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val fieldRequester = remember { FocusRequester() }
+    val confirmRequester = remember { FocusRequester() }
     Dialog(onDismissRequest = { if (!busy) onDismiss() }) {
         Column(
             Modifier.width(480.dp).shadow(16.dp, RoundedCornerShape(18.dp))
@@ -1513,7 +1515,9 @@ private fun LinkDialog(pkg: String, label: String, onDismiss: () -> Unit, onLink
                     singleLine = true,
                     textStyle = TextStyle(fontFamily = Geist, fontSize = 16.sp, color = C.Ink),
                     cursorBrush = SolidColor(C.accent),
-                    modifier = Modifier.fillMaxWidth().focusRequester(fieldRequester),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { runCatching { confirmRequester.requestFocus() } }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(fieldRequester).leaveDown(confirmRequester),
                 )
                 if (repoInput.isEmpty()) T(str(R.string.link_hint), 16.sp, color = C.Stone2)
             }
@@ -1537,7 +1541,7 @@ private fun LinkDialog(pkg: String, label: String, onDismiss: () -> Unit, onLink
                             }
                         }
                     },
-                    solid = true, icon = if (busy) null else Icons.Download,
+                    solid = true, icon = if (busy) null else Icons.Download, requester = confirmRequester,
                 )
             }
             LaunchedEffect(Unit) { runCatching { fieldRequester.requestFocus() } }
@@ -1749,7 +1753,7 @@ private fun PhoneDialog(onClose: () -> Unit) {
 }
 
 private fun backupApps(ctx: Context): List<App> =
-    shelfApps(ctx).map { it.first }.filter { it.code != null && it.id != "openshelf" }.sortedBy { it.name.lowercase() }
+    shelfApps(ctx).map { it.first }.filter { it.code != null && it.pkg != ctx.packageName }.sortedBy { it.name.lowercase() }
 
 @Composable
 private fun BackupDialog(apps: List<App>, onClose: () -> Unit) {
@@ -1782,11 +1786,16 @@ private fun BackupDialog(apps: List<App>, onClose: () -> Unit) {
     }
 }
 
+private fun Modifier.leaveDown(target: FocusRequester) = onPreviewKeyEvent { e ->
+    if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionDown) { runCatching { target.requestFocus() }; true } else false
+}
+
 @Composable
 private fun RestoreDialog(openApp: (String) -> Unit, onClose: () -> Unit) {
     var input by remember { mutableStateOf("") }
     var found by remember { mutableStateOf<List<App>?>(null) }
     val field = remember { FocusRequester() }
+    val go = remember { FocusRequester() }
     val list = found
     if (list != null) {
         AppListDialog(str(R.string.restore_title), plural(R.plurals.restore_found, list.size, list.size), list, openApp, onClose)
@@ -1811,8 +1820,9 @@ private fun RestoreDialog(openApp: (String) -> Unit, onClose: () -> Unit) {
                     singleLine = true,
                     textStyle = TextStyle(fontFamily = Geist, fontSize = 18.sp, color = C.Ink),
                     cursorBrush = SolidColor(C.accent),
-                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth().focusRequester(field),
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { runCatching { go.requestFocus() } }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(field).leaveDown(go),
                 )
                 if (input.isEmpty()) T("48213 99120", 18.sp, color = C.Stone2)
             }
@@ -1820,7 +1830,7 @@ private fun RestoreDialog(openApp: (String) -> Unit, onClose: () -> Unit) {
             Row(Modifier.padding(top = 20.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                 Pill(str(R.string.action_cancel), onClose)
                 Spacer(Modifier.width(10.dp))
-                Pill(str(R.string.restore_show, codes.size), { found = codes.mapNotNull { Catalog.byCode(it) }.distinct() }, solid = true)
+                Pill(str(R.string.restore_show, codes.size), { found = codes.mapNotNull { Catalog.byCode(it) }.distinct() }, solid = true, requester = go)
             }
             LaunchedEffect(Unit) { runCatching { field.requestFocus() } }
         }

@@ -314,4 +314,5 @@
     <string name="phone_title">Use your phone</string>
     <string name="phone_body">Scan the code with your phone on the same Wi-Fi. Search there, press Install, then confirm on the TV. Keep this screen open while you use it.</string>
     <string name="phone_offline">This TV isn’t on a home network, so your phone can’t reach it. Connect the TV to Wi-Fi or Ethernet and try again.</string>
+    <string name="pack_held">Held, key differs</string>
 </resources>

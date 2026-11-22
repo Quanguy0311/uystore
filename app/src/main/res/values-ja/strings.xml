@@ -306,4 +306,5 @@
     <string name="phone_title">スマホで操作</string>
     <string name="phone_body">同じWi-Fiのスマホでコードを読み取ってください。スマホで検索してインストールを押し、テレビで確認します。使っている間はこの画面を開いたままにしてください。</string>
     <string name="phone_offline">このテレビはホームネットワークにつながっていないため、スマホから接続できません。Wi-Fiか有線LANにつないで、もう一度試してください。</string>
+    <string name="pack_held">保留中（鍵が異なる）</string>
 </resources>

@@ -313,4 +313,5 @@
     <string name="phone_title">Usa tu móvil</string>
     <string name="phone_body">Escanea el código con el móvil en la misma wifi. Busca allí, pulsa Instalar y confirma en la TV. Deja esta pantalla abierta mientras lo usas.</string>
     <string name="phone_offline">Esta TV no está en una red doméstica y el móvil no puede llegar a ella. Conéctala por wifi o cable y vuelve a intentarlo.</string>
+    <string name="pack_held">Retenida, otra clave</string>
 </resources>

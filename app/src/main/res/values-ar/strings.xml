@@ -337,4 +337,5 @@
     <string name="phone_title">استخدم هاتفك</string>
     <string name="phone_body">امسح الرمز بهاتفك وهو على شبكة Wi-Fi نفسها. ابحث هناك واضغط تثبيت ثم أكّد على التلفاز. اترك هذه الشاشة مفتوحة أثناء الاستخدام.</string>
     <string name="phone_offline">هذا التلفاز ليس على شبكة منزلية، فلا يستطيع هاتفك الوصول إليه. صِله بشبكة Wi-Fi أو سلكية وحاول مرة أخرى.</string>
+    <string name="pack_held">معلّق، مفتاح مختلف</string>
 </resources>

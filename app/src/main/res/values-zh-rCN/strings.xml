@@ -306,4 +306,5 @@
     <string name="phone_title">用手机操作</string>
     <string name="phone_body">用连着同一 Wi-Fi 的手机扫描二维码。在手机上搜索并按安装，然后在电视上确认。使用期间请保持此画面打开。</string>
     <string name="phone_offline">这台电视没有连接家庭网络，手机无法连上。请把电视连上 Wi-Fi 或网线后再试。</string>
+    <string name="pack_held">已暂停，密钥不同</string>
 </resources>
