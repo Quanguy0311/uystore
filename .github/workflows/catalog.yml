@@ -17,14 +17,14 @@ concurrency:
 jobs:
   crawl:
     runs-on: ubuntu-latest
-    timeout-minutes: 340
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: work
-          key: crawl-${{ github.run_id }}
+          key: crawl-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: crawl-
 
       - name: Start from the published catalog
@@ -35,7 +35,15 @@ jobs:
       - name: Crawl GitHub
         env:
           GH_TOKEN: ${{ secrets.CRAWL_TOKEN }}
+        timeout-minutes: 330
         run: python3 -I tools/crawl.py work discover enrich forks inspect art build
+
+      - name: Keep crawl progress
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: work
+          key: crawl-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Sign and build the site
         env:
