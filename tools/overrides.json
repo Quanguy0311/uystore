@@ -1,0 +1,95 @@
+{
+  "extra": [
+    "nova-video-player/aos-AVP"
+  ],
+  "hide": [
+    "s1ddhants1/SwiftBackupPrem",
+    "Juby210/SwiftBackupPrem",
+    "TobiPeterG/tizentube-bridge",
+    "Xposed-Modules-Repo/io.github.s1ddhants1.swiftbackupprem"
+  ],
+  "names": {
+    "jellyfin/jellyfin-androidtv": "Jellyfin",
+    "moonlight-stream/moonlight-android": "Moonlight",
+    "nova-video-player/aos-AVP": "Nova Video Player",
+    "truefedex/tv-bro": "TV Bro",
+    "theothernt/AerialViews": "Aerial Views",
+    "supertuxkart/stk-code": "SuperTuxKart",
+    "Nomagno/stk-code": "SuperTuxKart tyre mod",
+    "aaa1115910/bv": "BV",
+    "qiin2333/moonlight-vplus": "Moonlight V+",
+    "Axixi2233/moonlight-android": "Moonlight (Axixi2233)",
+    "Gilleece/moonlight-android-xr": "Moonlight XR",
+    "WACrown/moonlight-android": "Moonlight (WACrown)",
+    "derflacco/moonlight-android": "Moonlight (derflacco)",
+    "MobinYengejehi/Artemis": "Artemis",
+    "webhtv/webhtv": "WebHTV",
+    "Silent1566/webhtv": "WebHTV (Silent1566)"
+  },
+  "notes": {
+    "jellyfin/jellyfin-androidtv": "Plays films, shows and music from your own Jellyfin server.",
+    "moonlight-stream/moonlight-android": "Streams games from your PC to the TV over your home network.",
+    "yuliskov/SmartTube": "Watch YouTube on your TV, with no ads and SponsorBlock built in.",
+    "nova-video-player/aos-AVP": "Plays video files from the box, USB drives and your network, with subtitles.",
+    "damontecres/Wholphin": "Another TV client for Jellyfin, with its own layout and player.",
+    "theothernt/AerialViews": "A screensaver of slow aerial videos, in the style of Apple TV’s.",
+    "truefedex/tv-bro": "A web browser built to be used with a TV remote.",
+    "Swordfish90/Lemuroid": "Plays retro console games. Pair a controller and pick a game.",
+    "fgl27/SmartTwitchTV": "Watch Twitch streams and chat from the sofa.",
+    "mpv-android/mpv-android": "A video player built on mpv. Plays almost any file and subtitle format.",
+    "immichFrame/ImmichFrame_Android": "Turns the TV into a photo frame for your Immich library."
+  },
+  "rooms": {
+    "webhtv/webhtv": "Streaming",
+    "Silent1566/webhtv": "Streaming",
+    "xingye84/webhtv0": "Streaming",
+    "Radiokot/photoprism-android-client": "Photos"
+  },
+  "packs": [
+    {
+      "id": "new_tv",
+      "title": "New TV",
+      "repos": [
+        "yuliskov/SmartTube",
+        "localsend/localsend",
+        "truefedex/tv-bro",
+        "anilbeesetti/nextplayer",
+        "zhanghai/MaterialFiles",
+        "theothernt/AerialViews"
+      ]
+    },
+    {
+      "id": "media",
+      "title": "Home media",
+      "repos": [
+        "jellyfin/jellyfin-androidtv",
+        "damontecres/Wholphin",
+        "nova-video-player/aos-AVP",
+        "mpv-android/mpv-android",
+        "immichFrame/ImmichFrame_Android"
+      ]
+    },
+    {
+      "id": "games",
+      "title": "Games",
+      "repos": [
+        "moonlight-stream/moonlight-android",
+        "Swordfish90/Lemuroid",
+        "yairm210/Unciv",
+        "supertuxkart/stk-code",
+        "nesbox/TIC-80"
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "Tools",
+      "repos": [
+        "MuntashirAkon/AppManager",
+        "ImranR98/Obtainium",
+        "Droid-ify/client",
+        "keymapperorg/KeyMapper",
+        "zhanghai/MaterialFiles"
+      ]
+    }
+  ]
+}

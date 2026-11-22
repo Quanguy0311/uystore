@@ -9,5 +9,6 @@ keystore.properties
 .DS_Store
 .idea/
 *.iml
-tools/
+tools/cache/
+__pycache__/
 /dist

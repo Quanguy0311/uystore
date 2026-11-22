@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install help · Open Shelf</title>
+<meta name="description" content="Where to allow app installs on common Android TVs, and what to do when a TV blocks them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="mark.png">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./"><picture><source srcset="mark_dark.png" media="(prefers-color-scheme: dark)"><img src="mark.png" alt="" width="26" height="26"></picture>Open Shelf</a>
+    <nav><a href="./">Apps</a><a href="https://github.com/wingedpanther/openshelf">GitHub</a></nav>
+  </header>
+  <main class="guide">
+    <h1>Install help</h1>
+    <p>Android won’t let an app install other apps until you allow it once. The switch is called Unknown sources or Install unknown apps, and every brand puts it somewhere slightly different. Find your TV below.</p>
+    <div class="toc">
+      <a class="chip" href="#google">Google TV</a><a class="chip" href="#sony">Sony</a><a class="chip" href="#xiaomi">Xiaomi</a>
+      <a class="chip" href="#tcl">TCL</a><a class="chip" href="#philips">Philips</a><a class="chip" href="#hisense">Hisense</a>
+      <a class="chip" href="#nvidia">Nvidia Shield</a><a class="chip" href="#amazon">Fire TV</a><a class="chip" href="#onn">onn</a>
+      <a class="chip" href="#jio">Jio, Airtel, Tata Play</a><a class="chip" href="#other">Other TVs</a>
+      <a class="chip" href="#adb">From a computer</a><a class="chip" href="#protect">Play Protect</a>
+    </div>
+
+    <section id="google">
+      <h2>Google TV and Chromecast</h2>
+      <ol>
+        <li>Open Settings from the gear at the top right of the home screen.</li>
+        <li>Go to Apps, then Security &amp; restrictions, then Unknown sources.</li>
+        <li>Turn on Open Shelf.</li>
+        <li>Go back to Open Shelf and press Install again.</li>
+      </ol>
+    </section>
+
+    <section id="sony">
+      <h2>Sony Bravia</h2>
+      <p>Bravia TVs from 2021 on run Google TV. Use the <a href="#google">Google TV steps</a>.</p>
+      <p>Older Bravia Android TVs: Settings, then Device Preferences, then Security &amp; restrictions, then Unknown sources. Turn on Open Shelf.</p>
+    </section>
+
+    <section id="xiaomi">
+      <h2>Xiaomi Mi Box, Mi TV Stick and Mi TV</h2>
+      <p>Settings, then Device Preferences, then Security &amp; restrictions, then Unknown sources. Turn on Open Shelf.</p>
+      <p>Newer Xiaomi TVs with Google TV use the <a href="#google">Google TV steps</a>. On PatchWall, open Settings from the PatchWall home screen first.</p>
+    </section>
+
+    <section id="tcl">
+      <h2>TCL</h2>
+      <p>TCL Google TVs use the <a href="#google">Google TV steps</a>. TCL Android TVs: Settings, then Device Preferences, then Security &amp; restrictions, then Unknown sources.</p>
+    </section>
+
+    <section id="philips">
+      <h2>Philips</h2>
+      <p>Settings, then Android settings or Device Preferences, then Security &amp; restrictions, then Unknown sources. Philips Google TVs use the <a href="#google">Google TV steps</a>.</p>
+    </section>
+
+    <section id="hisense">
+      <h2>Hisense</h2>
+      <p>Only Hisense TVs that run Android TV or Google TV can install apps. VIDAA models can’t run Open Shelf. On Android models, follow the <a href="#other">steps for other TVs</a>.</p>
+    </section>
+
+    <section id="nvidia">
+      <h2>Nvidia Shield</h2>
+      <p>Settings, then Device Preferences, then Security &amp; restrictions, then Unknown sources. Turn on Open Shelf.</p>
+    </section>
+
+    <section id="amazon">
+      <h2>Amazon Fire TV</h2>
+      <ol>
+        <li>Open Settings, then My Fire TV.</li>
+        <li>If you don’t see Developer options, open About and press OK on your device’s name 7 times.</li>
+        <li>Go to Developer options, then Install unknown apps, and turn on Open Shelf.</li>
+      </ol>
+    </section>
+
+    <section id="onn">
+      <h2>onn (Walmart)</h2>
+      <p>onn boxes run Google TV. Use the <a href="#google">Google TV steps</a>.</p>
+    </section>
+
+    <span id="airtel"></span><span id="tata"></span>
+    <section id="jio">
+      <h2>Jio, Airtel and Tata Play boxes</h2>
+      <p>Boxes from TV and internet providers often block installs that come from apps. The install screen never appears, and Open Shelf stops after 90 seconds and shows an error.</p>
+      <p>Look for Unknown sources in Settings first. If it’s missing or does nothing, install apps <a href="#adb">from a computer</a> instead.</p>
+    </section>
+
+    <span id="skyworth"></span><span id="toshiba"></span><span id="sharp"></span><span id="panasonic"></span>
+    <section id="other">
+      <h2>Other Android TVs</h2>
+      <p>Look in Settings for Unknown sources or Install unknown apps. It’s usually in one of these places:</p>
+      <ul>
+        <li>Apps, then Security &amp; restrictions (Google TV)</li>
+        <li>Device Preferences, then Security &amp; restrictions (Android TV)</li>
+        <li>Security, or Security &amp; restrictions, near the bottom of Settings</li>
+      </ul>
+      <p>If the switch is greyed out or won’t stay on, an app that draws over the screen may be in the way. Blue light filters and floating buttons do this. Turn them off and try again.</p>
+    </section>
+
+    <section id="adb">
+      <h2>From a computer with adb</h2>
+      <ol>
+        <li>On the TV, open Settings, then System, then About (or Device Preferences, then About). Press OK on Build or Android TV OS build 7 times to turn on Developer options.</li>
+        <li>In Developer options, turn on USB debugging or Network debugging.</li>
+        <li>Find the TV’s IP address under Network settings.</li>
+        <li>On the computer, install Android’s platform tools and run:<br><code>adb connect 192.168.1.20</code> (use your TV’s address)</li>
+        <li>If Open Shelf’s install switch won’t turn on, allow it from the computer:<br><code>adb shell appops set io.github.wingedpanther.openshelf REQUEST_INSTALL_PACKAGES allow</code></li>
+        <li>To install an APK directly:<br><code>adb install app.apk</code></li>
+      </ol>
+    </section>
+
+    <section id="protect">
+      <h2>Google Play Protect warnings</h2>
+      <p>Play Protect sometimes warns about apps that don’t come from the Play Store, Open Shelf included. Choose More details, then Install anyway. Before each install, Open Shelf checks that the file is signed with the same key the developer used before.</p>
+    </section>
+  </main>
+  <footer>Something missing for your TV? <a href="https://github.com/wingedpanther/openshelf/issues/new?template=bug.yml">Open an issue</a> with the brand and model.</footer>
+</div>
+</body>
+</html>

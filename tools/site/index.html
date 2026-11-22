@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Shelf</title>
+<meta name="description" content="Every Android TV app on GitHub that ships an APK, in one place. Install them on your TV with Open Shelf.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="mark.png">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="./"><picture><source srcset="mark_dark.png" media="(prefers-color-scheme: dark)"><img src="mark.png" alt="" width="26" height="26"></picture>Open Shelf</a>
+    <nav><a href="help.html">Install help</a><a href="https://github.com/wingedpanther/openshelf">GitHub</a></nav>
+  </header>
+  <section class="hero">
+    <div>
+      <h1>Android TV apps from GitHub</h1>
+      <p id="lede">Open Shelf finds every Android TV app on GitHub that ships an APK, and installs and updates them on your TV. Browse the list here. Every app has a code you can type into Open Shelf’s search to jump to it.</p>
+    </div>
+    <div class="get">
+      <small>Get Open Shelf on your TV with the Downloader app</small>
+      <div class="code">3399820</div>
+      <small>or download <a href="https://github.com/wingedpanther/openshelf/releases/latest">the latest APK</a></small>
+    </div>
+  </section>
+</div>
+<div class="tools">
+  <div class="wrap">
+    <input type="search" id="q" placeholder="Search apps, or type a code" autocomplete="off" aria-label="Search apps">
+    <div class="chips" id="rooms"></div>
+  </div>
+</div>
+<main class="wrap">
+  <div class="count" id="count">Loading the catalog…</div>
+  <div class="grid" id="grid"></div>
+  <button class="btn more" id="more" hidden>Show more</button>
+</main>
+<div class="wrap"><footer id="foot">App names, art and releases come from each project’s GitHub repository. Open Shelf is open source under GPL-3.0.</footer></div>
+<dialog id="sheet"></dialog>
+<script src="app.js"></script>
+</body>
+</html>

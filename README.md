@@ -99,7 +99,7 @@ The app list is built from public GitHub data. A copy ships inside the APK, and 
 
 Apps with fewer than 10 stars stay out of browsing, but search still finds them by their exact name.
 
-The crawler is [tools/crawl.py](tools/crawl.py) and runs every Monday in GitHub Actions. Hand fixes to names, categories, hidden apps and starter packs live in [tools/overrides.json](tools/overrides.json). Pull requests to that file are welcome.
+The list is rebuilt every Monday.
 
 ## Build
 

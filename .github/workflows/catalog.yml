@@ -1,0 +1,61 @@
+name: Catalog
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: catalog
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: work
+          key: crawl-${{ github.run_id }}
+          restore-keys: crawl-
+
+      - name: Start from the published catalog
+        run: |
+          curl -fsSL https://wingedpanther.github.io/openshelf/catalog.json -o published.json && mv published.json app/src/main/assets/catalog.json || true
+          rm -f work/discover.json work/enrich.json work/forks.json
+
+      - name: Crawl GitHub
+        env:
+          GH_TOKEN: ${{ secrets.CRAWL_TOKEN }}
+        run: python3 -I tools/crawl.py work discover enrich forks inspect art build
+
+      - name: Sign and build the site
+        env:
+          CATALOG_KEY: ${{ secrets.CATALOG_KEY }}
+        run: |
+          umask 077
+          printf '%s\n' "$CATALOG_KEY" > "$RUNNER_TEMP/key.pem"
+          CATALOG_KEY_FILE="$RUNNER_TEMP/key.pem" python3 -I tools/publish.py app/src/main/assets/catalog.json site
+          rm "$RUNNER_TEMP/key.pem"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: crawl
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
