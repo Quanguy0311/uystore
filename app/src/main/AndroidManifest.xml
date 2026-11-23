@@ -29,7 +29,7 @@
     </queries>
 
     <application
-        android:label="Open Shelf"
+        android:label="UY STORE"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/banner"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
