@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
@@ -296,7 +296,7 @@ private fun repoIntent(repo: String) =
     Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/$repo")).addCategory(Intent.CATEGORY_BROWSABLE).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
 fun hasBrowser(ctx: Context): Boolean =
-    ctx.packageManager.queryIntentActivities(repoIntent("wingedpanther/openshelf"), 0)
+    ctx.packageManager.queryIntentActivities(repoIntent("Quanguy0311/uystore"), 0)
         .any { "frameworkpackagestubs" !in it.activityInfo.packageName }
 
 fun openRepo(ctx: Context, repo: String) {
