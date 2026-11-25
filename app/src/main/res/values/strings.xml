@@ -293,4 +293,5 @@
     <string name="backup_title">Ứng dụng của bạn</string>
     <string name="backup_body">Quét mã QR để lưu danh sách này trên điện thoại hoặc ghi lại các mã số. Trên TV mới, vào Cài đặt &gt; Khôi phục ứng dụng và nhập vào.</string>
     <string name="backup_empty">Chưa có ứng dụng nào từ UY STORE trên TV này.</string>
-    </resources>
+    <string name="direct_note">Được thêm trực tiếp từ kho GitHub qua UY STORE.</string>
+</resources>
